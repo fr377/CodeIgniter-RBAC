@@ -1,0 +1,69 @@
+Here is a the database design for a "fine grained" Role Based Access Control (RBAC) system I am currently working on.
+<br>
+<br>
+<img src="images/rbac.png">
+<br>
+<br>
+The general concept is that a user can have one or more roles.<br>
+<ul>
+	<li>Each role is defined in the in "rabac_roles_has_domain_privileges" table.</li>
+	<li>A role is defined as the right (or denial) to exert a privilege on a domain.</li>
+	<li>A role is given an 'importance', i.e. an integer value between 0 and 100. The higher the number the greater the importance.</li>
+	<li>A domain is a collection of objects a user may want to access (or perform an action on), such as a 'member page' or 'forum topic'.</li>
+	<li>A privilege is a collection of actions a user may want to perform on an object, such as 'view', 'add', 'delete', 'edit'.</li>
+</ul>
+
+Briefly (and I will be adding more information with time)
+<ul>
+	<li>A domain can either be singular or plural.</li>
+	<li>A domain is "plural" if it is a collection of more than one object.</li>
+	<li>A domain is "singular" if it corresponds to only one object (so the object and domain name will be the same)</li>
+</ul>
+
+The same can be said about actions. (At this stage it is worth noting that plural domains will always finish with a 's'. Domains and objects are named by 'nouns' whereas, privileges and actions are named by 'verbs'.).
+<br>
+<br>
+A role is defined by several domain-privilege pairs.
+<ul>
+	<li>Domains that are singular have precedence over their corresponding object defined in a plural domain. This is important to define "fine-grained" role permissions.</li>
+</ul>
+
+For example, a singular domain defined by the action 'view' will have precedence over a plural domain defined by the actions 'add', 'edit', 'view'. (The plural domain also contains the action 'view' but will yield to the singular domain.)
+<br>
+The same can be said for privileges.
+<br>
+<br>
+Here are somemore pictures that should hopefully clarify things:
+<br>
+<br>
+<b>Users has roles</b><br>
+<img src="images/users_has_roles.jpg"><br>
+This picture shows that the user 'ben' has the 'administrator' and the 'member' role. This is just an example since the 'administrator' role automatically has access to all objects and can perform all actions.
+<br>
+<br>
+<b>Roles definition</b><br>
+<img src="images/roles.jpg"><br>
+The administrator role is the most important, followed by moderator, then member and finally the last is public.<br>
+NOTE: Two different roles can have the same importance. This is allowed.
+<br>
+<br>
+<b>Roles as permissions</b><br>
+<img src="images/roles_has_permissions.jpg"><br>
+Take a look at the moderator role definition. You will see that the moderator can perform all_actions on all_objects, except for the 'admin_page', which he is only allowed to view.
+<br>
+<br>
+<b>Privileges has actions</b><br>
+<img src="images/privileges_has_actions.jpg"><br>
+This picture clarifies the idea of 'singular' and 'plural'. Hopefully it is self explanatory.
+<br>
+<br>
+<b>Domains has objects</b><br>
+<img src="images/domains_has_objects.jpg">
+<br>
+<br>
+This project (including the admin panel) is 85% complete. It is already useable and written in PHP, so if you would like to try it out send me an email at ben at sqlrecipes dot com (If you do try it out, I would appreciate your feedback and suggestions.)
+<br>
+<br>
+If you have any suggestions concerning this article please post your comment below.
+<hr align="center">
+

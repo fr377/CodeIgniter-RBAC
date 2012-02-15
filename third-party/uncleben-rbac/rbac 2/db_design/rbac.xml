@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Db nm="rbac" flnm="rbac" ver="1.3.2">
+  <VerLbl/>
+  <VerNotes/>
+  <DefTblOpts/>
+  <DocFolder>/var/www/classes/authorize/db_design</DocFolder>
+  <Tbl nm="rbac_actions" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_actions" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="name" nu="1" au="0" df="">
+      <DT ds="VarChar" id="12" ln="50" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="description" nu="1" au="0" df="">
+      <DT ds="Text" id="703" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Idx nm="unique_name" unq="1" clu="0">
+      <ClNs>name</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_domains" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_domains" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="name" nu="1" au="0" df="">
+      <DT ds="VarChar" id="12" ln="40" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="description" nu="1" au="0" df="">
+      <DT ds="Text" id="703" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="is_singular" nu="0" au="0" df="0">
+      <DT ds="TinyInt" id="-6" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Idx nm="unique_name" unq="1" clu="0">
+      <ClNs>name</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_domains_has_objects" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_domains_has_objects" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="domains_id" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="objects_id" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Idx nm="fk_domains_has_objects_domains" unq="0" clu="0">
+      <ClNs>domains_id</ClNs>
+    </Idx>
+    <Idx nm="fk_domains_has_objects_objects" unq="0" clu="0">
+      <ClNs>objects_id</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_objects" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_objects" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="name" nu="1" au="0" df="">
+      <DT ds="VarChar" id="12" ln="50" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="description" nu="1" au="0" df="">
+      <DT ds="Text" id="703" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Idx nm="unique_name" unq="1" clu="0">
+      <ClNs>name</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_privileges" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_privileges" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="name" nu="1" au="0" df="">
+      <DT ds="VarChar" id="12" ln="50" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="description" nu="1" au="0" df="">
+      <DT ds="Text" id="703" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="is_singular" nu="0" au="0" df="0">
+      <DT ds="TinyInt" id="-6" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Idx nm="unique_name" unq="1" clu="0">
+      <ClNs>name</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_privileges_has_actions" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_privileges_has_actions" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="privileges_id" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="actions_id" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Idx nm="fk_privileges_has_actions_actions" unq="0" clu="0">
+      <ClNs>actions_id</ClNs>
+    </Idx>
+    <Idx nm="fk_privileges_has_actions_privileges" unq="0" clu="0">
+      <ClNs>privileges_id</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_roles" UsSo="1">
+    <TblOpts/>
+    <Pk nm="pkrbac_roles" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="name" nu="0" au="0" df="">
+      <DT ds="VarChar" id="12" ln="200" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="description" nu="0" au="0" df="">
+      <DT ds="Text" id="703" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="importance" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Idx nm="unique_name" unq="1" clu="0">
+      <ClNs>name</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_roles_has_domain_privileges" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkrbac_roles_has_domain_privileges" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="roles_id" nu="1" au="0" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="privileges_id" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="domains_id" nu="0" au="0" df="0">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Cl nm="is_allowed" nu="1" au="0" df="0">
+      <DT ds="TinyInt" id="-6" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Idx nm="fk_user_has_domain_privileges_domains" unq="0" clu="0">
+      <ClNs>domains_id</ClNs>
+    </Idx>
+    <Idx nm="fk_user_has_domain_privileges_privileges" unq="0" clu="0">
+      <ClNs>privileges_id</ClNs>
+    </Idx>
+    <Idx nm="unique_users_privileges_domains" unq="1" clu="0">
+      <ClNs>roles_id, domains_id, privileges_id</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="rbac_users_has_roles" UsSo="1">
+    <TblOpts/>
+    <Pk nm="pkrbac_users_has_roles" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="users_id" nu="0" au="0" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="roles_id" nu="0" au="0" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="0" en=""/>
+    </Cl>
+    <Idx nm="fk_roles_id_Idx" unq="0" clu="0">
+      <ClNs>roles_id</ClNs>
+    </Idx>
+    <Idx nm="fk_users_id_idx" unq="0" clu="0">
+      <ClNs>users_id</ClNs>
+    </Idx>
+    <Idx nm="unique_users_roles" unq="1" clu="0">
+      <ClNs>users_id, roles_id</ClNs>
+    </Idx>
+  </Tbl>
+  <Tbl nm="users" UsSo="1">
+    <TblOpts>ENGINE=INNODB</TblOpts>
+    <Pk nm="pkusers" ClNs="id"/>
+    <Cl nm="id" nu="0" au="1" df="">
+      <DT ds="Integer" id="4" ln="null" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="username" nu="0" au="0" df="">
+      <DT ds="VarChar" id="12" ln="50" sc="null" sg="1" en=""/>
+    </Cl>
+    <Cl nm="pswd" nu="0" au="0" df="">
+      <DT ds="VarChar" id="12" ln="70" sc="null" sg="1" en=""/>
+    </Cl>
+    <Idx nm="unique_username" unq="1" clu="0">
+      <ClNs>username</ClNs>
+    </Idx>
+  </Tbl>
+  <Fk nm="fk_auth_domains_has_objects_auth_domains" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_domains" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_domains_has_objects" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="domains_id"/>
+  </Fk>
+  <Fk nm="fk_auth_domains_has_objects_auth_objects" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_objects" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_domains_has_objects" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="objects_id"/>
+  </Fk>
+  <Fk nm="fk_auth_privileges_has_actions_auth_actions" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_actions" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_privileges_has_actions" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="actions_id"/>
+  </Fk>
+  <Fk nm="fk_auth_privileges_has_actions_auth_privileges" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_privileges" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_privileges_has_actions" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="privileges_id"/>
+  </Fk>
+  <Fk nm="fk_auth_user_has_domain_privileges_auth_domains" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_domains" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_roles_has_domain_privileges" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="domains_id"/>
+  </Fk>
+  <Fk nm="fk_auth_user_has_domain_privileges_auth_privileges" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_privileges" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_roles_has_domain_privileges" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="privileges_id"/>
+  </Fk>
+  <Fk nm="fk_auth_user_has_domain_privileges_auth_roles" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_roles" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_roles_has_domain_privileges" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="roles_id"/>
+  </Fk>
+  <Fk nm="fk_users_has_roles_roles" prLkCl="id" deAc="3">
+    <PrTb nm="rbac_roles" zr="0" oe="1" mn="0"/>
+    <CdTb nm="rbac_users_has_roles" zr="1" oe="1" mn="1"/>
+    <ClPr prCl="id" cdCl="roles_id"/>
+  </Fk>
+  <Dgm nm="main">
+    <RnCf zm="1.0" FtSz="9" lkStgy="KeyToKeyStrategy">
+      <VbCfg>
+        <Fg ky="Auto Number" vl="0"/>
+        <Fg ky="Check" vl="0"/>
+        <Fg ky="Comment" vl="0"/>
+        <Fg ky="Data Type" vl="1"/>
+        <Fg ky="Default" vl="0"/>
+        <Fg ky="ENUM Values" vl="0"/>
+        <Fg ky="Length" vl="1"/>
+        <Fg ky="Name" vl="1"/>
+        <Fg ky="Nullable" vl="0"/>
+        <Fg ky="Signed" vl="0"/>
+      </VbCfg>
+    </RnCf>
+    <TbGl tbl="rbac_actions" x="543" y="334" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_domains" x="81" y="199" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_domains_has_objects" x="75" y="274" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_objects" x="75" y="335" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_privileges" x="538" y="192" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_privileges_has_actions" x="542" y="270" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_roles" x="303" y="120" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_roles_has_domain_privileges" x="291" y="181" bkCl="ffffffe6"/>
+    <TbGl tbl="rbac_users_has_roles" x="313" y="66" bkCl="ffffffe6"/>
+    <TbGl tbl="users" x="310" y="9" bkCl="ffffffe6"/>
+    <FkGl nm="fk_auth_domains_has_objects_auth_domains" bkCl="ff000000"/>
+    <FkGl nm="fk_auth_domains_has_objects_auth_objects" bkCl="ff000000"/>
+    <FkGl nm="fk_auth_privileges_has_actions_auth_actions" bkCl="ff000000"/>
+    <FkGl nm="fk_auth_privileges_has_actions_auth_privileges" bkCl="ff000000"/>
+    <FkGl nm="fk_auth_user_has_domain_privileges_auth_domains" bkCl="ff000000"/>
+    <FkGl nm="fk_auth_user_has_domain_privileges_auth_privileges" bkCl="ff000000"/>
+    <FkGl nm="fk_auth_user_has_domain_privileges_auth_roles" bkCl="ff000000"/>
+    <FkGl nm="fk_users_has_roles_roles" bkCl="ff000000"/>
+  </Dgm>
+  <RnmMgr NxRnmId="15">
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="13" oNm="auth_roles" nNm="rbac_roles"/>
+      <Rnm id="1" oNm="roles" nNm="auth_roles"/>
+    </RnmCh>
+    <RnmCh ObjCls="Column" ParNme="rbac_roles_has_domain_privileges" ParCls="Table">
+      <Rnm id="2" oNm="users_id" nNm="roles_id"/>
+    </RnmCh>
+    <RnmCh ObjCls="Column" ParNme="rbac_users_has_roles" ParCls="Table">
+      <Rnm id="3" oNm="id" nNm="users_id"/>
+    </RnmCh>
+    <RnmCh ObjCls="Column" ParNme="rbac_users_has_roles" ParCls="Table">
+      <Rnm id="4" oNm="id" nNm="roles_id"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="12" oNm="auth_roles_has_domain_privileges" nNm="rbac_roles_has_domain_privileges"/>
+      <Rnm id="5" oNm="auth_user_has_domain_privileges" nNm="auth_roles_has_domain_privileges"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="6" oNm="auth_domains" nNm="rbac_domains"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="7" oNm="auth_domains_has_objects" nNm="rbac_domains_has_objects"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="8" oNm="auth_objects" nNm="rbac_objects"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="9" oNm="auth_actions" nNm="rbac_actions"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="10" oNm="auth_privileges_has_actions" nNm="rbac_privileges_has_actions"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="11" oNm="auth_privileges" nNm="rbac_privileges"/>
+    </RnmCh>
+    <RnmCh ObjCls="Table" ParNme="authorization" ParCls="Database">
+      <Rnm id="14" oNm="auth_users_has_roles" nNm="rbac_users_has_roles"/>
+    </RnmCh>
+  </RnmMgr>
+  <DbDocOptionMgr>
+    <BasicOptionMgr>
+      <Name>db.doc.option.mgr</Name>
+      <BooleanOption>
+        <Name>doc.diagrams</Name>
+        <Label>Diagrams</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.fks</Name>
+        <Label>Foreign Keys</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.indexes</Name>
+        <Label>Indexes</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.overwrite.css</Name>
+        <Label>Overwrite CSS File</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.procs</Name>
+        <Label>Procedures</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.sequences</Name>
+        <Label>Sequences</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.tables</Name>
+        <Label>Tables</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.triggers</Name>
+        <Label>Triggers</Label>
+        <Value>true</Value>
+      </BooleanOption>
+      <BooleanOption>
+        <Name>doc.views</Name>
+        <Label>Views</Label>
+        <Value>true</Value>
+      </BooleanOption>
+    </BasicOptionMgr>
+  </DbDocOptionMgr>
+</Db>
+

@@ -1,0 +1,16 @@
+I have made some changes to the template class. I am sorry for any inconvenience this may cause. 
+Because I will be releasing a number of classes in the next few weeks I had to standardise on a naming convention for all my classes. Since the name I have been using for my own purposes usually conflict with already existing class names I have added the suffix "_bv" to the filenames and class names to distinguish them from the rest.
+
+From a functional point of view, a new method has been added, called 'Enclose()', which will allow you to simultaneously add content before and after a given token.
+
+The output method, which is now called PrintTemplate() has been changed to allow multiple occurances of a token within the same template file to be filled. Previously it would only fill the first occurance.
+
+There was a small glitch in the error message as well, which has been fixed to properly display tokens that could not be substituted. (Generally this means that you misspelled the token name of that it does not exist in the template.)
+
+All suggestions and comments are welcome.
+Please visit http://www.vhd.com.au/forum for support.
+
+Regards,
+
+Ben
+
