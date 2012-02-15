@@ -1,0 +1,69 @@
+#tabulate {
+	margin-top: 20px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	color: #2D3F6D;
+	/*border: 5px solid gray;*/
+	text-align: left;
+}
+
+/*This is for the TITLE row*/
+#tabulate .title {
+	padding: 3px;
+	
+}
+
+/*This is for the main title line*/
+#tabulate #title{
+	font-size: 20px;
+	font-weight: bold;
+}
+
+#tabulate .tbl_data {
+	color: black;
+	border-style: none;
+	font-size: 10px;
+	padding-bottom: 7px;
+}
+
+#tabulate .tbl_data tr:hover {
+	background-color: white;
+}
+
+#tabulate .odd_row {
+	background-color: #fbfaad;
+}
+
+#tabulate .even_row {
+	background-color: #dedcc2;
+}
+
+/*Pager cell*/
+#tabulate .pager {
+	position: relative;
+	/*border: 1px solid black;*/
+	padding-bottom: 30px;
+}
+
+/*This is for the pager links*/
+#tabulate #pager_links {
+	/*color: green;*/
+	position: absolute;
+	left: 20px;
+	top: 0;
+}
+
+#tabulate #pager_info {
+	/*display: none;*/
+	position: absolute;
+	right: 20px;
+	top: 0;
+}
+
+#tabulate .button {
+	padding: 5px;
+}
+
+#tabulate .button input {
+	margin-right: 3px;
+	border: 1px solid black;
+}

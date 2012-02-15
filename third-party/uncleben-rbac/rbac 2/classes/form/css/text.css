@@ -1,0 +1,207 @@
+body {
+	margin: 0px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	/*background-color: lightgray;*/
+	background:  url('../images/templates/side.gif');
+}
+
+input, select, textarea {
+	border: 1px solid rgb(102, 102, 102);
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: rgb(51, 51, 51);
+}
+
+table {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #2D3F6D;
+}
+
+table#main{
+	background-color: white;
+}
+
+
+.header {
+	background-color: #9BA7C1;
+	width: 700px;
+}
+
+.logo {
+	background:  url('../images/templates/header.gif') top left no-repeat;
+	background-color: #9BA7C1;
+	height: 125px; /*176px*/
+}
+
+tr.footer{
+	background-color: #C6CCDC;
+	height: 50px;
+	text-align: center;
+	font-size: 10px;
+}
+
+.strip {
+	border-top: 2px solid #C6CCDC;
+	background-color: #2D3F6D;
+	color: #C6CCDC;
+	height: 25px;
+	font-size: 12px;
+}
+
+.strip div {
+	color: #C6CCDC;
+}
+
+.strip a, .strip a:visited{
+	color: #C6CCDC;
+	font-weight: bold;
+	text-decoration: none;
+	
+}
+
+.strip a:hover{
+	color: white;
+	
+}
+
+
+#left_col, #right_col, #center_col{
+	font-size: 10px;
+	color: #2D3F6D;
+}
+
+#left_col, #right_col{
+	background-color: #C6CCDC;
+}
+
+#center_col{
+	background:  url('../images/templates/peng.gif') top center no-repeat;
+	border-left: 3px solid #2D3F6D;
+	border-right: 3px solid #2D3F6D;
+	border-bottom: 3px solid #2D3F6D;
+	padding: 5px;
+}
+
+/* ============================================== */
+/* Below this line contains the CSS for the FORMS */
+
+.lbl{ /* Labels */
+	text-align: right;
+	position:relative;
+	right: 30px;
+	
+}
+
+.hdr{ /* Headers*/
+	font-size: 20px;
+	padding-bottom: 10px;
+	padding-left: 10px;
+}
+
+.inp input{
+	padding-left: 2px;
+	
+}
+
+.inp textarea{
+	padding: 5px;
+}
+
+.inp img{
+	padding-left: 2px;
+}
+
+.err input, .err select {
+	color: red;
+	font-size: 9px;
+	background: #FFFF99;
+}
+
+.err_img{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+/* ============================================== */
+/* Below this line contains the CSS for tables */
+
+.tbl_tabulate {
+	margin-top: 20px;
+}
+
+.tbl_data {
+	color: black;
+	border-style: none;
+	font-size: 11px;
+}
+
+.tbl_data tr:hover {
+	background-color: white;
+}
+
+.oddRow {
+	background-color: #fbfaad;
+}
+
+.evenRow {
+	background-color: #dedcc2;
+}
+
+/*------------------------------------*/
+/* this is for the bulletin news table*/
+
+.tbl_news {
+	font-family: Arial;
+}
+
+.tbl_news th {
+	font-size: 16px;
+	text-align: left;
+}
+
+.tbl_news table tr th {
+	font-size: 12px;
+	font-weight: bold;
+}
+
+/*-------------------------------*/
+/* This is for the news articles */
+
+.news {
+	font-family: Arial;
+	border: 1px solid #2D3F6D;
+	padding: 5px;
+	margin: 5px;
+	font-size: 13px;
+}
+
+
+.news th{
+	font-size: 16px;
+	text-align: left;
+}
+
+/*---------------------------------------------*/
+/* This is for the tabulation of news articles */
+
+.table_news {
+	border-collapse: collapse;
+}
+
+
+/*============================================*/
+/* CSS for sitemap page */
+
+ul#sitemap,
+ul#sitemap ul {
+	margin-left: 35px;
+	padding: 0;
+	font-size: 14px;
+}
+
+ul#sitemap li{
+	padding: 4px;
+}
+
