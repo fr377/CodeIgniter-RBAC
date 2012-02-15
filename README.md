@@ -36,7 +36,9 @@ For more information on SemVer, please visit http://semver.org/.
 Copyright and license
 ---------------------
 
-Copyright (C) 2012  Peter Castell <https://github.com/pdiddy>
+Copyright (C) 2012  Peter Castell
+
+http://github.com/pdiddy/CodeIgniter-RBAC
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
