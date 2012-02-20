@@ -13,8 +13,6 @@ class Welcome extends CI_Controller {
 		
 		// if there's a problem here, just try to rebuild the database
 		} catch (Exception $e) {
-			Rbac::setup();
-			die('User error -- database reactively rebuilt. ' . anchor(NULL, 'Try again'));
 		}
 	}
 

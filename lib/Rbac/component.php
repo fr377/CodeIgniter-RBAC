@@ -17,6 +17,8 @@ class Component extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
+	static $table_name = 'rbac_components';
+
 	static $belongs_to = array(
 		array('entity'),
 		array('resource')
@@ -35,11 +37,13 @@ class Component extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_create()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `components` (
+		if ($destroy_first)
+			self::db_destroy();
+
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`resource_id` int(10) unsigned DEFAULT NULL,
 				`entity_id` int(10) unsigned DEFAULT NULL,
@@ -54,14 +58,13 @@ class Component extends \ActiveRecord\Model
 	/**
 	 * Installation helper method.
 	 * 
-	 * @access public
+	 * @access private
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	private static function db_destroy()
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `components`");
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
 	
 
@@ -76,9 +79,9 @@ class Component extends \ActiveRecord\Model
 	{
 		$CI =& get_instance();
 		$CI->db->query("
-			ALTER TABLE `components`
-				ADD CONSTRAINT `components_ibfk_4` FOREIGN KEY (`entity_id`) REFERENCES `entities` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `components_ibfk_3` FOREIGN KEY (`resource_id`) REFERENCES `resources` (`id`) ON DELETE CASCADE;
+			ALTER TABLE `".self::$table_name."`
+				ADD CONSTRAINT `components_ibfk_4` FOREIGN KEY (`entity_id`) REFERENCES `".Entity::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `components_ibfk_3` FOREIGN KEY (`resource_id`) REFERENCES `".Resource::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }

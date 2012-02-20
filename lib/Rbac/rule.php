@@ -17,6 +17,8 @@ class Rule extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
+	static $table_name = 'rbac_rules';
+	
 	static $belongs_to = array(
 		array('privilege'),
 		array('group'),
@@ -36,11 +38,13 @@ class Rule extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_create()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `rules` (
+		if ($destroy_first)
+			self::db_destroy();
+
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`group_id` int(10) unsigned DEFAULT NULL,
 				`privilege_id` int(10) unsigned DEFAULT NULL,
@@ -58,14 +62,13 @@ class Rule extends \ActiveRecord\Model
 	/**
 	 * Installation helper method.
 	 * 
-	 * @access public
+	 * @access private
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	private static function db_destroy()
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `rules`");
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
 	
 
@@ -80,10 +83,10 @@ class Rule extends \ActiveRecord\Model
 	{
 		$CI =& get_instance();
 		$CI->db->query("
-			ALTER TABLE `rules`
-				ADD CONSTRAINT `rules_ibfk_6` FOREIGN KEY (`resource_id`) REFERENCES `resources` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `rules_ibfk_4` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `rules_ibfk_5` FOREIGN KEY (`privilege_id`) REFERENCES `privileges` (`id`) ON DELETE CASCADE;
+			ALTER TABLE `".self::$table_name."`
+				ADD CONSTRAINT `rules_ibfk_6` FOREIGN KEY (`resource_id`) REFERENCES `".Resource::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `rules_ibfk_4` FOREIGN KEY (`group_id`) REFERENCES `".Group::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `rules_ibfk_5` FOREIGN KEY (`privilege_id`) REFERENCES `".Privilege::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }

@@ -17,6 +17,8 @@ class Privilege extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
+	static $table_name = 'rbac_privileges';
+
 	static $has_many = array(
 		array('rules'),
 		array('liberties'),
@@ -104,25 +106,13 @@ class Privilege extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `privileges`");
-	}
-	
+		if ($destroy_first)
+			self::db_destroy();
 
-	/**
-	 * Installation helper method.
-	 * 
-	 * @access public
-	 * @static
-	 * @return void
-	 */
-	public static function db_create()
-	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `privileges` (
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`name` varchar(32) COLLATE utf8_unicode_ci DEFAULT NULL,
 				`singular` tinyint(1) unsigned NOT NULL DEFAULT '0',
@@ -130,5 +120,18 @@ class Privilege extends \ActiveRecord\Model
 				KEY `name` (`name`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
 		");
+	}
+
+
+	/**
+	 * Installation helper method.
+	 * 
+	 * @access private
+	 * @static
+	 * @return void
+	 */
+	private static function db_destroy()
+	{
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
 }
