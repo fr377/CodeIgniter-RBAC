@@ -9,8 +9,8 @@ class Inquiry extends CI_Controller {
 			$user = User::find($this->input->post('user_id'));
 			$entity = Entity::find($this->input->post('entity_id'));
 			$action = Action::find($this->input->post('action_id'));
-			
-			die(var_dump($user->is_allowed($entity, $action)));
+
+			return var_dump($user->is_allowed($action, $entity));
 		}
 
 		redirect();

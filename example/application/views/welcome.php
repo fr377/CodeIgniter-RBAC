@@ -79,7 +79,7 @@
 	<h1><?=anchor(NULL, "'Fine-Grained' Role Based Access Control Demo")?></h1>
 	
 	<div class="body">
-		<p><?=anchor('welcome/setup', 'Re-initialize')?> the database. Try a <?=anchor('welcome/scenario/1', 'proofreading scenario')?>, or something <?=anchor('welcome/scenario/2', 'a little more fantastic')?>.</p>
+		<p><?=anchor('welcome/setup', 'Re-initialize')?> the database. Try a populating the database with a curious <?=anchor('welcome/scenario/1', 'scenario')?>, or imagine your own.</p>
 		
 		<?=form_open('inquiry')?>
 			Does

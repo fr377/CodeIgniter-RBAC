@@ -4,23 +4,26 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * User class.
+ *
+ * Each user is identified by a unique email address that serves as their username.
  * 
  * @extends ActiveRecord
  */
 class User extends \ActiveRecord\Model
 {
-
+	public $_rbac_cache;
 
 	/* --------------------------------------------------
 	 *	ACTIVERECORD ASSOCIATIONS
 	 * ----------------------------------------------- */
 
 
+	static $table_name = 'rbac_users';
+	
 	static $has_many = array(
 		array('memberships'),
 		array('groups', 'through' => 'memberships')
 	);
-	
 
 
 	/* --------------------------------------------------
@@ -29,11 +32,75 @@ class User extends \ActiveRecord\Model
 
 
 	/**
+	 * Get all the rules that apply to a user
+	 *
+	 * N.b. this method should only return the array of rules; the caching should be done elsewhere.
+	 *
+	 * Something more like:
+	 *
+	 * $_SESSION['rbac_cache'] = $user->get_rbac_profile(); 
+	 * 
+	 * @access public
+	 * @return void
+	 */
+	public function get_rbac_profile()
+	{
+		$query = "
+			SELECT
+				`allowed`,
+				t2.`id` AS `privilege`,
+				t2.`singular` AS `is_granular_privilege`,
+				t4.`id` AS `action`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t7.`id` AS `entity`,
+				t8.`id` as `group`,
+				t8.`importance`
+
+			FROM `".Rule::$table_name."` AS t1
+
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id`
+				INNER JOIN `".Liberty::$table_name."` AS t3
+					ON t3.`privilege_id` = t2.`id`
+				INNER JOIN `".Action::$table_name."` AS t4
+					ON t4.`id` = t3.`action_id`
+
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
+				INNER JOIN `".Component::$table_name."` AS t6
+					ON t6.`resource_id` = t5.`id`
+				INNER JOIN `".Entity::$table_name."` AS t7
+					ON t7.`id` = t6.`entity_id`
+
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
+				INNER JOIN `".Membership::$table_name."` AS t9
+					ON t9.`group_id` = t8.`id`
+
+			WHERE
+				`user_id` = '{$this->id}'
+
+			ORDER BY
+				t4.`id`,
+				t7.`id`,
+				t8.`importance` DESC
+		";
+echo '<pre>';
+print_r($query);
+		return array_reverse(Rule::find_by_sql($query));
+	}
+
+
+	/**
 	 * Determine whether the user is a member of a group.
 	 * 
 	 * @access public
 	 * @param Group $group
-	 * @return void
+	 * @return boolean
 	 */
 	public function in_group(Group $group)
 	{
@@ -52,111 +119,91 @@ class User extends \ActiveRecord\Model
 	 * @param Action $action
 	 * @return void
 	 */
-	public function is_allowed(Entity $entity, Action $action)
+	public function is_allowed(Action $action, Entity $entity, $force_lookup = FALSE)
 	{
-		$query = "
-			SELECT
-				allowed,
-				t2.name AS `privilege`,
-				t2.singular AS `is_privilege_singular`,
-				t4.name AS `action`,
-				t5.name AS `resource`,
-				t5.singular AS `is_resource_singular`,
-				t7.name AS `entity`,
-				t8.name AS `group`,
-				t8.importance
-			
-			FROM rules AS t1
+		// first, we need an array of rules to traverse
+		
+		// if there is a permissions cache and we're not forcing a db lookup
+		if ($this->_rbac_cache && ! $force_lookup ) {
+			$rules = $this->_rbac_cache;
+			echo 'cache lookup<br>';
+
+		// perform a single lookup
+		} else {
+			// adjusted to search by action_id and entity_id, instead of names (which may not be unique)
+			$query = "
+				SELECT
+					`allowed`,
+					t2.`id` AS `privilege`,
+					t2.`singular` AS `is_granular_privilege`,
+					t4.`id` AS `action`,
+					t5.`id` AS `resource`,
+					t5.`singular` AS `is_granular_resource`,
+					t7.`id` AS `entity`,
+					t8.`id` AS `group`,
+					t8.`importance`
 				
-				-- Privileges Joins --
-				INNER JOIN privileges AS t2 ON t2.id = t1.privilege_id 
-				INNER JOIN liberties AS t3 ON t3.privilege_id = t2.id
-				INNER JOIN actions AS t4 ON t4.id = t3.action_id
+				FROM `".Rule::$table_name."` AS t1
+					
+					-- Privileges Joins --
+					INNER JOIN `".Privilege::$table_name."` AS t2
+						ON t2.`id` = t1.`privilege_id` 
+					INNER JOIN `".Liberty::$table_name."` AS t3
+						ON t3.`privilege_id` = t2.`id`
+					INNER JOIN `".Action::$table_name."` AS t4
+						ON t4.`id` = t3.`action_id`
+	
+					-- Resources Joins --
+					INNER JOIN `".Resource::$table_name."` AS t5
+						ON t5.`id` = t1.`resource_id`
+					INNER JOIN `".Component::$table_name."` AS t6
+						ON t6.`resource_id` = t5.`id`
+					INNER JOIN `".Entity::$table_name."` AS t7
+						ON t7.`id` = t6.`entity_id`
+	
+					-- Groups to user Joins --
+					INNER JOIN `".Group::$table_name."` AS t8
+						ON t8.`id` = t1.`group_id`
+					INNER JOIN `".Membership::$table_name."` AS t9
+						ON t9.`group_id` = t8.`id`
+	
+				WHERE
+					`user_id` = '{$this->id}'
+						AND
+					t4.`id` = '{$action->id}'
+						AND
+					t7.`id` = '{$entity->id}'
+	
+				ORDER BY
+					t8.`importance` DESC,
+					t8.`id`
+				";
 
-				-- Resources Joins --
-				INNER JOIN resources AS t5 ON t5.id = t1.resource_id
-				INNER JOIN components AS t6 ON t6.resource_id = t5.id
-				INNER JOIN entities AS t7 ON t7.id = t6.entity_id
+			$rules = array_reverse(Rule::find_by_sql($query));
+		}
 
-				-- Groups to user Joins --
-				INNER JOIN groups AS t8 ON t8.id = t1.group_id
-				INNER JOIN memberships AS t9 ON t9.group_id = t8.id
-
-			WHERE
-				user_id = {$this->id}
-					AND
-				t4.name = '{$action->name}'
-					AND
-				t7.name = '{$entity->name}'
-
-			ORDER BY
-				t8.importance DESC,
-				t8.name
-			";
-
-		// adjusted to search by action_id and entity_id, instead of names (which may not be unique)
-		$query = "
-			SELECT
-				allowed,
-				t2.name AS `privilege`,
-				t2.singular AS `is_privilege_singular`,
-				t4.name AS `action`,
-				t5.name AS `resource`,
-				t5.singular AS `is_resource_singular`,
-				t7.name AS `entity`,
-				t8.name AS `group`,
-				t8.importance
-			
-			FROM rules AS t1
-				
-				-- Privileges Joins --
-				INNER JOIN privileges AS t2 ON t2.id = t1.privilege_id 
-				INNER JOIN liberties AS t3 ON t3.privilege_id = t2.id
-				INNER JOIN actions AS t4 ON t4.id = t3.action_id
-
-				-- Resources Joins --
-				INNER JOIN resources AS t5 ON t5.id = t1.resource_id
-				INNER JOIN components AS t6 ON t6.resource_id = t5.id
-				INNER JOIN entities AS t7 ON t7.id = t6.entity_id
-
-				-- Groups to user Joins --
-				INNER JOIN groups AS t8 ON t8.id = t1.group_id
-				INNER JOIN memberships AS t9 ON t9.group_id = t8.id
-
-			WHERE
-				user_id = {$this->id}
-					AND
-				t4.id = '{$action->id}'
-					AND
-				t7.id = '{$entity->id}'
-
-			ORDER BY
-				t8.importance DESC,
-				t8.name
-			";
-echo '<pre>';
-print_r($query);
 		$allowed = NULL;
 		$importance_threshold = NULL;
 		$weight_threshold = -1;
 
-		$rules = array_reverse(Rule::find_by_sql($query));
-
 		do {
 			$rule = array_pop($rules);
-			
-			if ($rule->importance < $importance_threshold) {
-				continue;
+
+			if ($rule->action == $action->id && $rule->entity == $entity->id) {
+
+				if ($rule->importance < $importance_threshold) {
+					continue;
+				}
+
+				$weight = $rule->is_granular_privilege + $rule->is_granular_resource;
+	
+				if ($weight > $weight_threshold) {
+					$allowed = $rule->allowed ? TRUE : FALSE;
+					$weight_threshold = $weight;
+	
+				} else if ($weight == $weight_threshold && ! $rule->allowed)
+					$allowed = FALSE;
 			}
-
-			$weight = $rule->is_privilege_singular + $rule->is_resource_singular;
-
-			if ($weight > $weight_threshold) {
-				$allowed = $rule->allowed ? TRUE : FALSE;
-				$weight_threshold = $weight;
-
-			} else if ($weight == $weight_threshold && ! $rule->allowed)
-				$allowed = FALSE;
 
 		} while ($rules);
 
@@ -205,16 +252,23 @@ print_r($query);
 	 * @static
 	 * @return void
 	 */
-	public static function db_create()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `users` (
+		if ($destroy_first)
+			self::db_destroy();
+
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`email` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
+				`password` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
 				`first_name` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
+				`last_name` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
+				`gender` varchar(16) COLLATE utf8_unicode_ci DEFAULT NULL,
+				`created_at` datetime NOT NULL,
+				`updated_at` datetime NOT NULL,
 				PRIMARY KEY (`id`),
-				KEY `email` (`email`)
+				UNIQUE KEY `email` (`email`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
 		");
 	}
@@ -223,14 +277,13 @@ print_r($query);
 	/**
 	 * Installation helper method.
 	 * 
-	 * @access public
+	 * @access private
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	private static function db_destroy()
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `users`");
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
 
 

@@ -27,6 +27,8 @@ class Entity extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
+	static $table_name = 'rbac_entities';
+
 	static $has_many = array(
 		array('components'),
 		array('resources', 'through' => 'components')
@@ -46,11 +48,13 @@ class Entity extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_create()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `entities` (
+		if ($destroy_first)
+			self::db_destroy();
+
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`name` varchar(32) COLLATE utf8_unicode_ci DEFAULT NULL,
 				`description` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -64,14 +68,13 @@ class Entity extends \ActiveRecord\Model
 	/**
 	 * Installation helper method.
 	 * 
-	 * @access public
+	 * @access private
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	private static function db_destroy()
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `entities`");
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
 	
 
