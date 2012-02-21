@@ -13,8 +13,6 @@ class Welcome extends CI_Controller {
 		
 		// if there's a problem here, just try to rebuild the database
 		} catch (Exception $e) {
-			Rbac::setup();
-			die('User error -- database reactively rebuilt. ' . anchor(NULL, 'Try again'));
 		}
 	}
 
@@ -33,11 +31,6 @@ class Welcome extends CI_Controller {
 
 		switch ($lookup) {
 
-			case 'action':
-				$view_data['display'] =  'Action';
-				$view_data['search_id'] =  $search;
-				break;
-
 			case 'user':
 				$view_data['display'] = 'User';
 				$view_data['search_id'] = $search;
@@ -48,19 +41,25 @@ class Welcome extends CI_Controller {
 				$view_data['search_id'] = $search;
 				break;
 
-			case 'resource':
-				$view_data['display'] = Rbac\Resource::find($search, array('include' => array('components', 'rules')));
-				break;
-
 			case 'entity':
 				$view_data['display'] = 'Entity';
 				$view_data['search_id'] = $search;
 				break;
 
-			case 'privilege':
-				$view_data['display'] = Rbac\Privilege::find($search, array('include' => array('liberties', 'rules')));
+			case 'resource':
+				$view_data['display'] = 'Resource';
+				$view_data['search_id'] = $search;
 				break;
 
+			case 'action':
+				$view_data['display'] =  'Action';
+				$view_data['search_id'] =  $search;
+				break;
+
+			case 'privilege':
+				$view_data['display'] = 'Privilege';
+				$view_data['search_id'] =  $search;
+				break;
 
 		}
 

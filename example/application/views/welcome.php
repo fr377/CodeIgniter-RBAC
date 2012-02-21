@@ -79,32 +79,7 @@
 	<h1><?=anchor(NULL, "'Fine-Grained' Role Based Access Control Demo")?></h1>
 	
 	<div class="body">
-		<p><?=anchor('welcome/setup', 'Re-initialize')?> the database. Try a <?=anchor('welcome/scenario/1', 'proofreading scenario')?>, or something <?=anchor('welcome/scenario/2', 'a little more fantastic')?>.</p>
-		
-		<?=form_open('inquiry')?>
-			Does
-			<select name="user_id">
-			<?foreach(User::all() as $user):?>
-				<option value="<?=$user->id?>"><?=$user->email?></option>
-			<?endforeach;?>
-			</select>
-			
-			have
-			<select name="action_id">
-			<?foreach(Action::all() as $action):?>
-				<option value="<?=$action->id?>"><?=$action->name?></option>
-			<?endforeach;?>
-			</select>
-			
-			to
-			<select name="entity_id">
-			<?foreach(Entity::all() as $entity):?>
-				<option value="<?=$entity->id?>"><?=$entity->name?></option>
-			<?endforeach;?>
-			</select>
-
-			<?=form_submit('submit', 'Inquire')?>
-		<?=form_close()?>
+		<p><?=anchor('welcome/setup', 'Re-initialize')?> the database. Try a populating the database with a curious <?=anchor('welcome/scenario/1', 'scenario')?>, or imagine your own.</p>
 	</div>
 
 	<?php
@@ -156,8 +131,12 @@
 		<div class="controls_box"><?=$this->load->view('_controls_entities');?></div>
 	</div>
 
-	<div class="grid_12">
+	<div class="grid_8">
 		<?=$this->load->view('_controls_rules');?>
+	</div>
+	
+	<div class="grid_4">
+		<?=$this->load->view('_inquiry.php')?>
 	</div>
 
 	<div class="grid_12">

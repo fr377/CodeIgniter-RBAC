@@ -18,6 +18,8 @@ class Membership extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
+	static $table_name = 'rbac_memberships';
+
 	static $belongs_to = array(
 		array('user'),
 		array('group')
@@ -36,25 +38,13 @@ class Membership extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `memberships`");
-	}
-	
+		if ($destroy_first)
+			self::db_destroy();
 
-	/**
-	 * Installation helper method.
-	 * 
-	 * @access public
-	 * @static
-	 * @return void
-	 */
-	public static function db_create()
-	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `memberships` (
+		return get_instance()->db->query("
+			CREATE TABLE `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`user_id` int(10) unsigned DEFAULT NULL,
 				`group_id` int(10) unsigned DEFAULT NULL,
@@ -69,6 +59,19 @@ class Membership extends \ActiveRecord\Model
 	/**
 	 * Installation helper method.
 	 * 
+	 * @access private
+	 * @static
+	 * @return void
+	 */
+	protected static function db_destroy()
+	{
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
+	}
+	
+
+	/**
+	 * Installation helper method.
+	 * 
 	 * @access public
 	 * @static
 	 * @return void
@@ -77,9 +80,9 @@ class Membership extends \ActiveRecord\Model
 	{
 		$CI =& get_instance();
 		$CI->db->query("
-			ALTER TABLE `memberships`
-				ADD CONSTRAINT `memberships_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `memberships_ibfk_2` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE;
+			ALTER TABLE `".self::$table_name."`
+				ADD CONSTRAINT `memberships_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `".User::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `memberships_ibfk_2` FOREIGN KEY (`group_id`) REFERENCES `".Group::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }

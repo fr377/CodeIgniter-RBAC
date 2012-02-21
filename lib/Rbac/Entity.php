@@ -7,7 +7,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
  * can be allowed or denied based on their privileges.
  *
  * Because of the way associated objects are automatically created/deleted, the following is true:
- *	- $this->components[0] is always the global resource
+ *	- $this->components[0] is always the global resource ('all resources')
  *	- $this->components[1] is always the singular resource (for granular control)
  * 
  * @extends ActiveRecord
@@ -26,6 +26,12 @@ class Entity extends \ActiveRecord\Model
 	 *	ACTIVERECORD ASSOCIATIONS
 	 * ----------------------------------------------- */
 
+
+	static $table_name = 'rbac_entities';
+
+	static $after_save = array('create_singular_resource');
+
+	static $before_destroy = array('destroy_singular_resource');
 
 	static $has_many = array(
 		array('components'),
@@ -46,11 +52,13 @@ class Entity extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_create()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `entities` (
+		if ($destroy_first)
+			self::db_destroy();
+
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`name` varchar(32) COLLATE utf8_unicode_ci DEFAULT NULL,
 				`description` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -64,14 +72,13 @@ class Entity extends \ActiveRecord\Model
 	/**
 	 * Installation helper method.
 	 * 
-	 * @access public
+	 * @access private
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	protected static function db_destroy()
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `entities`");
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
 	
 
@@ -86,7 +93,7 @@ class Entity extends \ActiveRecord\Model
 	 * @access public
 	 * @return void
 	 */
-	public function after_save()
+	public function create_singular_resource()
 	{
 		// every entity belongs to the special global (i.e., 'all') resource
 		Resource::find(1)->subsume($this);
@@ -108,8 +115,8 @@ class Entity extends \ActiveRecord\Model
 	 * @access public
 	 * @return void
 	 */
-	public function before_destroy()
+	public function destroy_singular_resource()
 	{
-		Resource::find($this->components[1]->resource_id)->delete();
+		return Resource::find($this->components[1]->resource_id)->delete();
 	}
 }

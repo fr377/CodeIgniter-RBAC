@@ -1,115 +1,47 @@
 <?php
-/* $entity = Entity::find($search_id, array('include' => array('components', 'resources'))); */
-/*
 $entity = Entity::find(
 	$search_id,
-	array('include' =>
-		array(
-			'components',
-			'resources'
+	array(
+		'include' => array(
+			'components' => array(
+				'resource'
+			),
 		),
 	)
 );
-*/
-
-try {
-	$entity = Entity::find(
-		$search_id,
-		array(
-			'include' => array(
-				'components' => array(
-					'resource'
-				),
-/* 				'resources' */
-			),
-		)
-	);
-
-
-
-/*
-$posts = Post::find(
-	'first',
-	array(
-		'include' => array(
-			'category',
-			'comments' => array(
-				'author'
-			)
-		)
-	)
-);
-*/
-
-
 ?>
 <div class="grid_6">
-	<h2>Entity (<?=$entity->name?>)</h2>
-	<?=$entity->description ? '<p>' . $entity->description . '</p>' : NULL?>
-<pre>
-<?=print_r($entity)?>
-</pre>
-	
-	<strong>Resources</strong>
-	<ul>
-		<?if($entity->resources):?>
-			<?foreach($entity->resources as $resource):?>
-			<li>
-				<?=form_open('resources/exclude')?>
-					<?=form_hidden('resource_id', $resource->id)?>
-					<?=form_hidden('entity_id', $entity->id)?>
-					<?=form_submit('submit', 'Exclude')?>
-					from <?=$resource->name?>
-				<?=form_close()?>
-			</li>
-			<?endforeach;?>
-		<?endif;?>
+	<h2>Entity (<?=$entity->name?>) <?=$entity->description ? '<small>' . $entity->description . '</small>' : NULL?></h2>
 
-		<?php
-/*
-		if ($entity->components) {
-			foreach ($entity->components as $component) {
-				$resource = Resource::find($component->resource_id);
-				?>
+	<strong>Component of</strong>
+	<ul>
+		<?foreach($entity->components as $component):?>
+			<?if( ! $component->resource->singular ):?>
 				<li>
 					<?=form_open('resources/exclude')?>
-						<?=form_hidden('resource_id', $resource->id)?>
+						<?=form_hidden('resource_id', $component->resource->id)?>
 						<?=form_hidden('entity_id', $entity->id)?>
 						<?=form_submit('submit', 'Exclude')?>
-						from <?=$resource->name?>
+						from <?=$component->resource->name?>
 					<?=form_close()?>
 				</li>
-				<?php
-			}
-		} else {
-			echo "<li>This entity does not form part of any component.</li>";
-		}
-*/
-		?>
+			<?endif;?>
+		<?endforeach;?>
 		<li>
 			<?=form_open('resources/subsume')?>
 				<?=form_hidden('entity_id', $entity->id)?>
 				<?=form_submit('submit', 'Add')?> to 
 				<select name="resource_id">
-					<?php
-					foreach(Resource::all(array('conditions' => 'singular is FALSE')) as $resource) {
-						if ( ! $resource->includes($entity) )
-							echo "<option value=\"{$resource->id}\">{$resource->name}</option>";
-					}
-					?>
+					<option value="">--- resource ---</option>
+					<?foreach(Resource::all(array('conditions' => 'singular is FALSE')) as $resource):?>
+						<?if( ! ($resource->includes($entity)) ):?>
+							<option value="<?=$resource->id?>"><?=$resource->name?></option>
+						<?endif?>
+					<?endforeach?>
 				</select>
-				
 			<?=form_close()?>
 		</li>
 	</ul>
 </div>
 <div class="clear"></div>
 <hr>
-
-<?php
-} catch (Exception $e) {
-	echo $e->getMessage();
-/* 	print_r($e); */
-}
-
-?>

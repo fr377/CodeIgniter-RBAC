@@ -11,7 +11,7 @@ class Actions extends CI_Controller {
 			$action->save();
 		}
 		
-		redirect();
+		redirect('action/' . $action->id);
 	}
 
 
@@ -21,5 +21,33 @@ class Actions extends CI_Controller {
 			$action->delete();
 
 		redirect();
+	}
+
+
+	public function grant()
+	{
+		if ($this->input->post()) {
+			$privilege = Privilege::find($this->input->post('privilege_id'));
+			$action = Action::find($this->input->post('action_id'));
+
+			if ($privilege->allows($action))
+				$privilege->grant($action);
+		}
+
+		redirect('action/' . $action->id);
+	}
+
+
+	public function revoke()
+	{
+		if ($this->input->post()) {
+			$privilege = Privilege::find($this->input->post('privilege_id'));
+			$action = Action::find($this->input->post('action_id'));
+
+			if ($privilege->allows($action))
+				$privilege->revoke($action);
+		}
+
+		redirect('action/' . $action->id);
 	}
 }

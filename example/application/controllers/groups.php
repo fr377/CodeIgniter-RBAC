@@ -19,6 +19,17 @@ class Groups extends CI_Controller {
 	}
 
 
+	public function change_importance()
+	{
+		if ($this->input->post())
+			Group::find($this->input->post('id'))->update_attributes(array(
+				'importance' => $this->input->post('importance')
+			));
+		
+		redirect();
+	}
+
+
 	public function delete()
 	{
 		if ($this->input->post()) {

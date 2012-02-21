@@ -19,7 +19,9 @@ class Liberty extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
-	static $has_one = array(
+	static $table_name = 'rbac_liberties';
+
+	static $belongs_to = array(
 		array('action'),
 		array('privilege')
 	);
@@ -37,25 +39,13 @@ class Liberty extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	public static function db_destroy()
+	public static function db_create($destroy_first = TRUE)
 	{
-		$CI =& get_instance();
-		$CI->db->query("DROP TABLE IF EXISTS `liberties`");
-	}
-	
+		if ($destroy_first)
+			self::db_destroy();
 
-	/**
-	 * Installation helper method.
-	 * 
-	 * @access public
-	 * @static
-	 * @return void
-	 */
-	public static function db_create()
-	{
-		$CI =& get_instance();
-		$CI->db->query("
-			CREATE TABLE `liberties` (
+		return get_instance()->db->query("
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 				`privilege_id` int(10) unsigned NOT NULL,
 				`action_id` int(10) unsigned NOT NULL,
@@ -70,6 +60,19 @@ class Liberty extends \ActiveRecord\Model
 	/**
 	 * Installation helper method.
 	 * 
+	 * @access private
+	 * @static
+	 * @return void
+	 */
+	protected static function db_destroy()
+	{
+		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
+	}
+	
+
+	/**
+	 * Installation helper method.
+	 * 
 	 * @access public
 	 * @static
 	 * @return void
@@ -78,9 +81,9 @@ class Liberty extends \ActiveRecord\Model
 	{
 		$CI =& get_instance();
 		$CI->db->query("
-			ALTER TABLE `liberties`
-				ADD CONSTRAINT `liberties_ibfk_4` FOREIGN KEY (`action_id`) REFERENCES `actions` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `liberties_ibfk_3` FOREIGN KEY (`privilege_id`) REFERENCES `privileges` (`id`) ON DELETE CASCADE;
+			ALTER TABLE `".self::$table_name."`
+				ADD CONSTRAINT `liberties_ibfk_4` FOREIGN KEY (`action_id`) REFERENCES `".Action::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `liberties_ibfk_3` FOREIGN KEY (`privilege_id`) REFERENCES `".Privilege::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }
