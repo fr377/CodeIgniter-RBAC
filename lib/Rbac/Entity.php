@@ -7,7 +7,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
  * can be allowed or denied based on their privileges.
  *
  * Because of the way associated objects are automatically created/deleted, the following is true:
- *	- $this->components[0] is always the global resource
+ *	- $this->components[0] is always the global resource ('all resources')
  *	- $this->components[1] is always the singular resource (for granular control)
  * 
  * @extends ActiveRecord
@@ -28,6 +28,10 @@ class Entity extends \ActiveRecord\Model
 
 
 	static $table_name = 'rbac_entities';
+
+	static $after_save = array('create_singular_resource');
+
+	static $before_destroy = array('destroy_singular_resource');
 
 	static $has_many = array(
 		array('components'),
@@ -89,7 +93,7 @@ class Entity extends \ActiveRecord\Model
 	 * @access public
 	 * @return void
 	 */
-	public function after_save()
+	public function create_singular_resource()
 	{
 		// every entity belongs to the special global (i.e., 'all') resource
 		Resource::find(1)->subsume($this);
@@ -111,8 +115,8 @@ class Entity extends \ActiveRecord\Model
 	 * @access public
 	 * @return void
 	 */
-	public function before_destroy()
+	public function destroy_singular_resource()
 	{
-		Resource::find($this->components[1]->resource_id)->delete();
+		return Resource::find($this->components[1]->resource_id)->delete();
 	}
 }

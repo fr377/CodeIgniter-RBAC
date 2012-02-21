@@ -6,6 +6,10 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
  * User class.
  *
  * Each user is identified by a unique email address that serves as their username.
+ *
+ * Because of the way associated objects are automatically created/deleted, the following is true:
+ *	- $this->memberships[0] is always the global group ('all users')
+ *	- $this->memberships[1] is always the singular group (for granular control)
  * 
  * @extends ActiveRecord
  */
@@ -19,6 +23,10 @@ class User extends \ActiveRecord\Model
 
 
 	static $table_name = 'rbac_users';
+
+	static $after_save = array('create_singular_group');
+
+	static $before_destroy = array('destroy_singular_group');
 	
 	static $has_many = array(
 		array('memberships'),
@@ -89,8 +97,7 @@ class User extends \ActiveRecord\Model
 				t7.`id`,
 				t8.`importance` DESC
 		";
-echo '<pre>';
-print_r($query);
+
 		return array_reverse(Rule::find_by_sql($query));
 	}
 
@@ -119,70 +126,21 @@ print_r($query);
 	 * @param Action $action
 	 * @return void
 	 */
-	public function is_allowed(Action $action, Entity $entity, $force_lookup = FALSE)
+	public function is_allowed($verb, $noun, $force_lookup = FALSE)
 	{
-		// first, we need an array of rules to traverse
+		if ( ! ($verb instanceof Action)
+			&& ! ($verb instanceof Privilege))
+				throw new \Exception('Verb clause must be either an Action or Privilege object.');
+
+		if ( ! ($noun instanceof Entity)
+			&& ! ($noun instanceof Resource))
+				throw new \Exception('Noun clause must be either an Entity or Resource object');
+
+		$query_method = strtolower('_query_' . get_class($verb) . '_on_' . get_class($noun));
+		$rules = array_reverse(Rule::find_by_sql(self::$query_method($verb, $noun)));
 		
-		// if there is a permissions cache and we're not forcing a db lookup
-		if ($this->_rbac_cache && ! $force_lookup ) {
-			$rules = $this->_rbac_cache;
-			echo 'cache lookup<br>';
-
-		// perform a single lookup
-		} else {
-			// adjusted to search by action_id and entity_id, instead of names (which may not be unique)
-			$query = "
-				SELECT
-					`allowed`,
-					t2.`id` AS `privilege`,
-					t2.`singular` AS `is_granular_privilege`,
-					t4.`id` AS `action`,
-					t5.`id` AS `resource`,
-					t5.`singular` AS `is_granular_resource`,
-					t7.`id` AS `entity`,
-					t8.`id` AS `group`,
-					t8.`importance`
-				
-				FROM `".Rule::$table_name."` AS t1
-					
-					-- Privileges Joins --
-					INNER JOIN `".Privilege::$table_name."` AS t2
-						ON t2.`id` = t1.`privilege_id` 
-					INNER JOIN `".Liberty::$table_name."` AS t3
-						ON t3.`privilege_id` = t2.`id`
-					INNER JOIN `".Action::$table_name."` AS t4
-						ON t4.`id` = t3.`action_id`
-	
-					-- Resources Joins --
-					INNER JOIN `".Resource::$table_name."` AS t5
-						ON t5.`id` = t1.`resource_id`
-					INNER JOIN `".Component::$table_name."` AS t6
-						ON t6.`resource_id` = t5.`id`
-					INNER JOIN `".Entity::$table_name."` AS t7
-						ON t7.`id` = t6.`entity_id`
-	
-					-- Groups to user Joins --
-					INNER JOIN `".Group::$table_name."` AS t8
-						ON t8.`id` = t1.`group_id`
-					INNER JOIN `".Membership::$table_name."` AS t9
-						ON t9.`group_id` = t8.`id`
-	
-				WHERE
-					`user_id` = '{$this->id}'
-						AND
-					t4.`id` = '{$action->id}'
-						AND
-					t7.`id` = '{$entity->id}'
-	
-				ORDER BY
-					t8.`importance` DESC,
-					t8.`id`
-				";
-echo '<pre>';
-print_r($query);
-
-			$rules = array_reverse(Rule::find_by_sql($query));
-		}
+		// if no rules apply, run away! 
+		if ( ! $rules ) return NULL;
 
 		$allowed = NULL;
 		$importance_threshold = NULL;
@@ -190,22 +148,18 @@ print_r($query);
 
 		do {
 			$rule = array_pop($rules);
+		
+			if ($rule->importance < $importance_threshold)
+				continue;
 
-			if ($rule->action == $action->id && $rule->entity == $entity->id) {
+			$weight = $rule->is_granular_privilege + $rule->is_granular_resource;
 
-				if ($rule->importance < $importance_threshold) {
-					continue;
-				}
+			if ($weight > $weight_threshold) {
+				$allowed = $rule->allowed ? TRUE : FALSE;
+				$weight_threshold = $weight;
 
-				$weight = $rule->is_granular_privilege + $rule->is_granular_resource;
-	
-				if ($weight > $weight_threshold) {
-					$allowed = $rule->allowed ? TRUE : FALSE;
-					$weight_threshold = $weight;
-	
-				} else if ($weight == $weight_threshold && ! $rule->allowed)
-					$allowed = FALSE;
-			}
+			} else if ($weight == $weight_threshold && ! $rule->allowed)
+				$allowed = FALSE;
 
 		} while ($rules);
 
@@ -300,8 +254,12 @@ print_r($query);
 	 * @access public
 	 * @return void
 	 */
-	public function after_save()
+	public function create_singular_group()
 	{
+		// every entity belongs to the special global (i.e., 'all') group
+		// cleanup for this is handled automatically by delete cascade in memberships
+		Group::find(1)->enroll($this);
+		
 		// create and join a singular (i.e., granular) group
 		$group = new Group();
 		$group->name = $this->email;
@@ -309,9 +267,206 @@ print_r($query);
 		$group->importance = 101;
 		$group->save();
 		
-		$this->join_group($group);
-		
-		// join the global group
-		$this->join_group(Group::find(1));
+		$group->enroll($this);
+	}
+
+	/**
+	 * Destroy the granular (i.e., singular) group.
+	 * 
+	 * @access public
+	 * @return void
+	 */
+	public function destroy_singular_group()
+	{
+		Group::find($this->memberships[1]->group_id)->delete();
+	}
+
+
+
+	private function _query_action_on_resource(Action $action, Resource $resource)
+	{
+		return $query = "
+			SELECT
+				`allowed`,
+				t2.`id` AS `privilege`,
+				t2.`singular` AS `is_granular_privilege`,
+				t4.`id` AS `action`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t8.`id` AS `group`,
+				t8.`importance`
+			
+			FROM `".Rule::$table_name."` AS t1
+				
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id` 
+				INNER JOIN `".Liberty::$table_name."` AS t3
+					ON t3.`privilege_id` = t2.`id`
+				INNER JOIN `".Action::$table_name."` AS t4
+					ON t4.`id` = t3.`action_id`
+
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
+
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
+				INNER JOIN `".Membership::$table_name."` AS t9
+					ON t9.`group_id` = t8.`id`
+
+			WHERE
+				`user_id` = '{$this->id}'
+					AND
+				t4.`id` = '{$action->id}'
+					AND
+				`resource_id` = '{$resource->id}'
+
+			ORDER BY
+				t8.`importance` DESC,
+				t8.`id`
+		";
+	}
+
+
+	private function _query_action_on_entity(Action $action, Entity $entity)
+	{
+		return $query = "
+			SELECT
+				`allowed`,
+				t2.`id` AS `privilege`,
+				t2.`singular` AS `is_granular_privilege`,
+				t4.`id` AS `action`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t7.`id` AS `entity`,
+				t8.`id` AS `group`,
+				t8.`importance`
+			
+			FROM `".Rule::$table_name."` AS t1
+				
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id` 
+				INNER JOIN `".Liberty::$table_name."` AS t3
+					ON t3.`privilege_id` = t2.`id`
+				INNER JOIN `".Action::$table_name."` AS t4
+					ON t4.`id` = t3.`action_id`
+
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
+				INNER JOIN `".Component::$table_name."` AS t6
+					ON t6.`resource_id` = t5.`id`
+				INNER JOIN `".Entity::$table_name."` AS t7
+					ON t7.`id` = t6.`entity_id`
+
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
+				INNER JOIN `".Membership::$table_name."` AS t9
+					ON t9.`group_id` = t8.`id`
+
+			WHERE
+				`user_id` = '{$this->id}'
+					AND
+				t4.`id` = '{$action->id}'
+					AND
+				t7.`id` = '{$entity->id}'
+
+			ORDER BY
+				t8.`importance` DESC,
+				t8.`id`
+		";
+	}
+	
+	
+	private function _query_privilege_on_resource(Privilege $privilege, Resource $resource)
+	{
+		return $query = "
+			SELECT
+				`allowed`,
+				t2.`id` AS `privilege`,
+				t2.`singular` AS `is_granular_privilege`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t8.`id` AS `group`,
+				t8.`importance`
+			
+			FROM `".Rule::$table_name."` AS t1
+				
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id` 
+
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
+
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
+				INNER JOIN `".Membership::$table_name."` AS t9
+					ON t9.`group_id` = t8.`id`
+
+			WHERE
+				`user_id` = '{$this->id}'
+					AND
+				`privilege_id` = '{$privilege->id}'
+					AND
+				`resource_id` = '{$resource->id}'
+
+			ORDER BY
+				t8.`importance` DESC,
+				t8.`id`
+		";
+	}
+	
+	
+	private function _query_privilege_on_entity(Privilege $privilege, Entity $entity)
+	{
+		return $query = "
+			SELECT
+				`allowed`,
+				t2.`id` AS `privilege`,
+				t2.`singular` AS `is_granular_privilege`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t7.`id` AS `entity`,
+				t8.`id` AS `group`,
+				t8.`importance`
+			
+			FROM `".Rule::$table_name."` AS t1
+				
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id` 
+
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
+				INNER JOIN `".Component::$table_name."` AS t6
+					ON t6.`resource_id` = t5.`id`
+				INNER JOIN `".Entity::$table_name."` AS t7
+					ON t7.`id` = t6.`entity_id`
+
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
+				INNER JOIN `".Membership::$table_name."` AS t9
+					ON t9.`group_id` = t8.`id`
+
+			WHERE
+				`user_id` = '{$this->id}'
+					AND
+				`privilege_id` = '{$privilege->id}'
+					AND
+				t7.`id` = '{$entity->id}'
+
+			ORDER BY
+				t8.`importance` DESC,
+				t8.`id`
+		";
 	}
 }

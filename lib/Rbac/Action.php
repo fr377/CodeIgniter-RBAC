@@ -6,6 +6,10 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
  * Actions are described with verbs. An action is something that can be done to (or with) a resource.
  * For example, your system might benefit from actions such as 'create', 'retrieve', 'update', and 'delete'.
  * But consider another system with actions like 'chew', 'cook', 'dance', or 'telepathy'.
+ *
+ * Because of the way associated objects are automatically created/deleted, the following is true:
+ *	- $this->liberties[0] is always the global privilege ('all privileges')
+ *	- $this->liberties[1] is always the singular privilege (for granular control)
  * 
  * @extends ActiveRecord
  */
@@ -19,6 +23,10 @@ class Action extends \ActiveRecord\Model
 
 
 	static $table_name = 'rbac_actions';
+	
+	static $after_save = array('create_singular_privilege');
+
+	static $before_destroy = array('destroy_singular_privilege');
 
 	static $has_many = array(
 		array('liberties'),
@@ -79,7 +87,7 @@ class Action extends \ActiveRecord\Model
 	 * @access public
 	 * @return void
 	 */
-	public function after_save()
+	public function create_singular_privilege()
 	{
 		// every entity belongs to the special global (i.e., 'all') resource
 		Privilege::find(1)->grant($this);
@@ -91,19 +99,12 @@ class Action extends \ActiveRecord\Model
 		$privilege->save();
 		
 		$privilege->grant($this);
-/*
-		// every action has a singular privilege for ganular rules
-		if ( ! Liberty::find_by_action_id($this->id) ) {
-			$privilege = new Privilege();
-			$privilege->name = $this->name;
-			$privilege->save();
-			
-			if ( ! $privilege->allows($this) )
-				$privilege->grant($this);
+	}
 
-			// every action is a part of the global privilege
-			Privilege::find(1)->grant($this);
-		}
-*/
+
+	public function destroy_singular_privilege()
+	{
+		// need to delete the singular privilege
+		return Privilege::find($this->liberties[1]->privilege_id)->delete();
 	}
 }

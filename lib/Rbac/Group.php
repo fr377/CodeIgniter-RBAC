@@ -81,6 +81,60 @@ class Group extends \ActiveRecord\Model
 	}
 
 
+	
+
+
+	/**
+	 * is_allowed function.
+	 * 
+	 * @access public
+	 * @param mixed $verb Either an Action or Privilege object
+	 * @param mixed $noun Either an Entity or Resource object
+	 * @param boolean $force_lookup (default: FALSE)
+	 * @return mixed TRUE, FALSE, or NULL if no rule can be found to apply
+	 */
+	public function is_allowed($verb, $noun, $force_lookup = FALSE)
+	{
+		if ( ! ($verb instanceof Action)
+			&& ! ($verb instanceof Privilege))
+				throw new \Exception('Verb clause must be either an Action or Privilege object.');
+
+		if ( ! ($noun instanceof Entity)
+			&& ! ($noun instanceof Resource))
+				throw new \Exception('Noun clause must be either an Entity or Resource object');
+
+		$query_method = strtolower('_query_' . get_class($verb) . '_on_' . get_class($noun));
+
+		$rules = array_reverse(Rule::find_by_sql(self::$query_method($verb, $noun)));
+		
+		// if no rules apply, run away! 
+		if ( ! $rules ) return NULL;
+
+		$allowed = NULL;
+		$importance_threshold = NULL;
+		$weight_threshold = -1;
+
+		do {
+			$rule = array_pop($rules);
+		
+			if ($rule->importance < $importance_threshold)
+				continue;
+
+			$weight = $rule->is_granular_privilege + $rule->is_granular_resource;
+
+			if ($weight > $weight_threshold) {
+				$allowed = $rule->allowed ? TRUE : FALSE;
+				$weight_threshold = $weight;
+
+			} else if ($weight == $weight_threshold && ! $rule->allowed)
+				$allowed = FALSE;
+
+		} while ($rules);
+
+		return $allowed;
+	}
+
+
 	private function _query_action_on_resource(Action $action, Resource $resource)
 	{
 		return $query = "
@@ -91,7 +145,6 @@ class Group extends \ActiveRecord\Model
 				t4.`id` AS `action`,
 				t5.`id` AS `resource`,
 				t5.`singular` AS `is_granular_resource`,
-				t7.`id` AS `entity`,
 				t8.`id` AS `group`,
 				t8.`importance`
 			
@@ -108,10 +161,6 @@ class Group extends \ActiveRecord\Model
 				-- Resources Joins --
 				INNER JOIN `".Resource::$table_name."` AS t5
 					ON t5.`id` = t1.`resource_id`
-				INNER JOIN `".Component::$table_name."` AS t6
-					ON t6.`resource_id` = t5.`id`
-				INNER JOIN `".Entity::$table_name."` AS t7
-					ON t7.`id` = t6.`entity_id`
 
 				-- Groups to user Joins --
 				INNER JOIN `".Group::$table_name."` AS t8
@@ -129,7 +178,8 @@ class Group extends \ActiveRecord\Model
 				t8.`id`
 			";
 	}
-	
+
+
 	private function _query_action_on_entity(Action $action, Entity $entity)
 	{
 		return $query = "
@@ -179,62 +229,87 @@ class Group extends \ActiveRecord\Model
 			";
 	}
 	
-	private function _query_privilege_on_resource()
-	{}
 	
-	private function _query_privilege_on_entity()
-	{}
-
-
-	/**
-	 * is_allowed function.
-	 * 
-	 * @access public
-	 * @param mixed $verb Either an Action or Privilege object
-	 * @param Entity $noun Either an Entity or Resource object
-	 * @param boolean $force_lookup (default: FALSE)
-	 * @return void
-	 */
-	public function is_allowed($verb, $noun, $force_lookup = FALSE)
+	private function _query_privilege_on_resource(Privilege $privilege, Resource $resource)
 	{
-		if ( ! ($verb instanceof Action)
-			&& ! ($verb instanceof Privilege))
-				throw new \Exception('Verb clause must be either an Action or Privilege object.');
+		return $query = "
+			SELECT
+				`allowed`,
+				t2.`singular` AS `is_granular_privilege`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t8.`id` AS `group`,
+				t8.`importance`
+			
+			FROM `".Rule::$table_name."` AS t1
+				
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id` 
 
-		if ( ! ($noun instanceof Entity)
-			&& ! ($noun instanceof Resource))
-				throw new \Exception('Noun clause must be either an Entity or Resource object');
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
 
-		$query_method = strtolower('_query_' . get_class($verb) . '_on_' . get_class($noun));
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
 
-echo '<pre>';
-echo $query_method.'<br>';
-print_r(self::$query_method($verb, $noun));
-		$rules = array_reverse(Rule::find_by_sql(self::$query_method($verb, $noun)));
+			WHERE
+				`group_id` = '{$this->id}'
+					AND
+				`privilege_id` = '{$privilege->id}'
+					AND
+				`resource_id` = '{$resource->id}'
 
-		$allowed = NULL;
-		$importance_threshold = NULL;
-		$weight_threshold = -1;
-
-		do {
-			$rule = array_pop($rules);
-
-			if ($rule->importance < $importance_threshold)
-				continue;
-
-			$weight = $rule->is_granular_privilege + $rule->is_granular_resource;
-
-			if ($weight > $weight_threshold) {
-				$allowed = $rule->allowed ? TRUE : FALSE;
-				$weight_threshold = $weight;
-
-			} else if ($weight == $weight_threshold && ! $rule->allowed)
-				$allowed = FALSE;
-
-		} while ($rules);
-
-		return $allowed;
+			ORDER BY
+				t8.`importance` DESC,
+				t8.`id`
+			";
 	}
+	
+	
+	private function _query_privilege_on_entity(Privilege $privilege, Entity $entity)
+	{
+		return $query = "
+			SELECT
+				`allowed`,
+				t2.`id` AS `privilege`,
+				t2.`singular` AS `is_granular_privilege`,
+				t5.`id` AS `resource`,
+				t5.`singular` AS `is_granular_resource`,
+				t7.`id` AS `entity`,
+				t8.`id` as `group`,
+				t8.`importance`
 
+			FROM `".Rule::$table_name."` AS t1
 
+				-- Privileges Joins --
+				INNER JOIN `".Privilege::$table_name."` AS t2
+					ON t2.`id` = t1.`privilege_id`
+
+				-- Resources Joins --
+				INNER JOIN `".Resource::$table_name."` AS t5
+					ON t5.`id` = t1.`resource_id`
+				INNER JOIN `".Component::$table_name."` AS t6
+					ON t6.`resource_id` = t5.`id`
+				INNER JOIN `".Entity::$table_name."` AS t7
+					ON t7.`id` = t6.`entity_id`
+
+				-- Groups to user Joins --
+				INNER JOIN `".Group::$table_name."` AS t8
+					ON t8.`id` = t1.`group_id`
+
+			WHERE
+				`group_id` = '{$this->id}'
+					AND
+				`entity_id` = '{$entity->id}'
+					AND
+				`privilege_id` = '{$privilege->id}'
+
+			ORDER BY
+				t7.`id`,
+				t8.`importance` DESC
+		";
+	}
 }
