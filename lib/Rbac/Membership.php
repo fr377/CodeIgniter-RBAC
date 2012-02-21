@@ -3,11 +3,13 @@ namespace Rbac;
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Group class.
+ * Memberships represent the associations between users and groups.
+ *
+ * A membership is to a group and a user as a liberty is to a privilege and an action.
  * 
  * @extends ActiveRecord
  */
-class Group extends \ActiveRecord\Model
+class Membership extends \ActiveRecord\Model
 {
 
 
@@ -16,14 +18,12 @@ class Group extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
-	static $table_name = 'rbac_groups';
+	static $table_name = 'rbac_memberships';
 
-	static $has_many = array(
-		array('rules'),
-		array('memberships'),
-		array('users', 'through' => 'memberships')
+	static $belongs_to = array(
+		array('user'),
+		array('group')
 	);
-
 
 
 	/* --------------------------------------------------
@@ -44,13 +44,13 @@ class Group extends \ActiveRecord\Model
 			self::db_destroy();
 
 		return get_instance()->db->query("
-			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
+			CREATE TABLE `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-				`name` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
-				`importance` int(10) unsigned NOT NULL DEFAULT '1',
-				`singular` tinyint(1) unsigned NOT NULL DEFAULT '0',
+				`user_id` int(10) unsigned DEFAULT NULL,
+				`group_id` int(10) unsigned DEFAULT NULL,
 				PRIMARY KEY (`id`),
-				KEY `name` (`name`)
+				KEY `user_id` (`user_id`),
+				KEY `group_id` (`group_id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
 		");
 	}
@@ -63,8 +63,26 @@ class Group extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
+	}
+	
+
+	/**
+	 * Installation helper method.
+	 * 
+	 * @access public
+	 * @static
+	 * @return void
+	 */
+	public static function db_relations()
+	{
+		$CI =& get_instance();
+		$CI->db->query("
+			ALTER TABLE `".self::$table_name."`
+				ADD CONSTRAINT `memberships_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `".User::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `memberships_ibfk_2` FOREIGN KEY (`group_id`) REFERENCES `".Group::$table_name."` (`id`) ON DELETE CASCADE;
+  		");
 	}
 }

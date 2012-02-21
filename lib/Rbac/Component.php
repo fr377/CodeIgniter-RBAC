@@ -3,12 +3,12 @@ namespace Rbac;
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Rules are the key to it all! A rule brings together a group (i.e., one or more users) with a resource (i.e., one
- * or more entities) and a privilege (i.e., one or more actions).
+ * A component describes the relationship between a resource and an entity. The term 'component' was chosen
+ * to support the conceptualization of entities being component parts of resources.
  * 
  * @extends ActiveRecord
  */
-class Rule extends \ActiveRecord\Model
+class Component extends \ActiveRecord\Model
 {
 
 
@@ -17,11 +17,10 @@ class Rule extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
-	static $table_name = 'rbac_rules';
-	
+	static $table_name = 'rbac_components';
+
 	static $belongs_to = array(
-		array('privilege'),
-		array('group'),
+		array('entity'),
 		array('resource')
 	);
 
@@ -46,19 +45,16 @@ class Rule extends \ActiveRecord\Model
 		return get_instance()->db->query("
 			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-				`group_id` int(10) unsigned DEFAULT NULL,
-				`privilege_id` int(10) unsigned DEFAULT NULL,
 				`resource_id` int(10) unsigned DEFAULT NULL,
-				`allowed` tinyint(1) unsigned DEFAULT NULL,
+				`entity_id` int(10) unsigned DEFAULT NULL,
 				PRIMARY KEY (`id`),
-				KEY `group_id` (`group_id`),
-				KEY `privilege_id` (`privilege_id`),
-				KEY `resource_id` (`resource_id`)
-			) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+				KEY `resource_id` (`resource_id`),
+				KEY `entity_id` (`entity_id`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
 		");
 	}
 
-	
+
 	/**
 	 * Installation helper method.
 	 * 
@@ -66,7 +62,7 @@ class Rule extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
@@ -84,9 +80,8 @@ class Rule extends \ActiveRecord\Model
 		$CI =& get_instance();
 		$CI->db->query("
 			ALTER TABLE `".self::$table_name."`
-				ADD CONSTRAINT `rules_ibfk_6` FOREIGN KEY (`resource_id`) REFERENCES `".Resource::$table_name."` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `rules_ibfk_4` FOREIGN KEY (`group_id`) REFERENCES `".Group::$table_name."` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `rules_ibfk_5` FOREIGN KEY (`privilege_id`) REFERENCES `".Privilege::$table_name."` (`id`) ON DELETE CASCADE;
+				ADD CONSTRAINT `components_ibfk_4` FOREIGN KEY (`entity_id`) REFERENCES `".Entity::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `components_ibfk_3` FOREIGN KEY (`resource_id`) REFERENCES `".Resource::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }

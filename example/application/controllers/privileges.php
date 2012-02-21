@@ -3,19 +3,28 @@
 class Privileges extends CI_Controller {
 
 
-	public function bestow()
+	public function grant()
 	{
-		if ($this->input->post() && $privilege = Privilege::find($this->input->post('privilege_id'), array('include' => array('liberties')))) {
+		if ($this->input->post()) {
+			$privilege = Privilege::find($this->input->post('privilege_id'));
+			$action = Action::find($this->input->post('action_id'));
+			
+			if ( ! $privilege->allows($action) )
+				$privilege->grant($action);
+		}
 
-			foreach (Action::all() as $action) {
-				if ($this->input->post($action->id)) {
-					if ( ! $privilege->allows($action) )
-						$privilege->grant($action);
-				} else {
-					if ($privilege->allows($action))
-						$privilege->revoke($action);
-				}
-			}
+		redirect('privilege/' . $privilege->id);
+	}
+	
+	
+	public function revoke()
+	{
+		if ($this->input->post()) {
+			$privilege = Privilege::find($this->input->post('privilege_id'));
+			$action = Action::find($this->input->post('action_id'));
+
+			if ($privilege->allows($action))
+				$privilege->revoke($action);
 		}
 
 		redirect('privilege/' . $privilege->id);
@@ -30,26 +39,15 @@ class Privileges extends CI_Controller {
 			$privilege->save();
 		}
 		
-		redirect();
+		redirect('privilege/' . $privilege->id);
 	}
 
 
 	public function delete()
 	{
-		if ($this->input->post() && $privilege = Privilege::find($this->input->post('id')))
-			$privilege->delete();
+		if ($this->input->post())
+			Privilege::find($this->input->post('id'))->delete();
 
 		redirect();
 	}
-
-
-	public function revoke()
-	{
-		if ($this->input->post()
-			&& $privilege = Privilege::find($this->input->post('privilege_id'))
-			&& $action = Action::find($this->input->post('action_id')))
-				$privilege->revoke($action);
-		
-		redirect();
-	}	
 }

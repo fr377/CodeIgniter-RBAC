@@ -29,7 +29,7 @@ class Resources extends CI_Controller {
 		if ($this->input->post())
 			Resource::find($this->input->post('resource_id'))->exclude(Entity::find($this->input->post('entity_id')));
 
-		redirect('entity/' . $this->input->post('entity_id'));
+		redirect('resource/' . $this->input->post('resource_id'));
 	}
 
 
@@ -38,6 +38,6 @@ class Resources extends CI_Controller {
 		if ($this->input->post())
 			Resource::find($this->input->post('resource_id'))->subsume(Entity::find($this->input->post('entity_id')));
 
-		redirect('entity/' . $this->input->post('entity_id'));
+		redirect('resource/' . $this->input->post('resource_id'));
 	}
 }

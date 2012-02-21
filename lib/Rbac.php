@@ -5,12 +5,15 @@
  *
  * 'Fine-grained' role based access control library for CodeIgniter.
  *
+ * @todo Delete associated singular privilege when deleting an action
+ * @todo I think there's a bug in User::is_allowed() ... it doesn't account for group weight.
  */
 class Rbac
 {
 
 	public function __construct()
 	{
+/* 		get_instance()->load->add_package_path(__CLASS__); */
 		require_once(__CLASS__ . '/Action.php');
 		require_once(__CLASS__ . '/Privilege.php');
 		require_once(__CLASS__ . '/Liberty.php');
@@ -191,7 +194,7 @@ class Rbac
 	{
 		self::_reset_schema();
 		self::_reset_records();
-/* 		self::_reset_relations(); */
+		self::_reset_relations();
 	}
 	
 

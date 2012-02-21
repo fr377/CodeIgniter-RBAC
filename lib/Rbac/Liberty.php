@@ -3,12 +3,14 @@ namespace Rbac;
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * A component describes the relationship between a resource and an entity. The term 'component' was chosen
- * to support the conceptualization of entities being component parts of resources.
+ * A liberty represents the privilege to perform an action. If a user has a certain privilege,
+ * then (barring other rules) they are 'at liberty' to perform certain actions.
+ *
+ * A liberty is to a privilege and an action as a membership is to a group and a user.
  * 
  * @extends ActiveRecord
  */
-class Component extends \ActiveRecord\Model
+class Liberty extends \ActiveRecord\Model
 {
 
 
@@ -17,11 +19,11 @@ class Component extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
-	static $table_name = 'rbac_components';
+	static $table_name = 'rbac_liberties';
 
 	static $belongs_to = array(
-		array('entity'),
-		array('resource')
+		array('action'),
+		array('privilege')
 	);
 
 
@@ -45,11 +47,11 @@ class Component extends \ActiveRecord\Model
 		return get_instance()->db->query("
 			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-				`resource_id` int(10) unsigned DEFAULT NULL,
-				`entity_id` int(10) unsigned DEFAULT NULL,
+				`privilege_id` int(10) unsigned NOT NULL,
+				`action_id` int(10) unsigned NOT NULL,
 				PRIMARY KEY (`id`),
-				KEY `resource_id` (`resource_id`),
-				KEY `entity_id` (`entity_id`)
+				KEY `privilege_id` (`privilege_id`),
+				KEY `action_id` (`action_id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
 		");
 	}
@@ -62,7 +64,7 @@ class Component extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
@@ -80,8 +82,8 @@ class Component extends \ActiveRecord\Model
 		$CI =& get_instance();
 		$CI->db->query("
 			ALTER TABLE `".self::$table_name."`
-				ADD CONSTRAINT `components_ibfk_4` FOREIGN KEY (`entity_id`) REFERENCES `".Entity::$table_name."` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `components_ibfk_3` FOREIGN KEY (`resource_id`) REFERENCES `".Resource::$table_name."` (`id`) ON DELETE CASCADE;
+				ADD CONSTRAINT `liberties_ibfk_4` FOREIGN KEY (`action_id`) REFERENCES `".Action::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `liberties_ibfk_3` FOREIGN KEY (`privilege_id`) REFERENCES `".Privilege::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }
