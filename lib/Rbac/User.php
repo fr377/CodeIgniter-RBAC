@@ -178,6 +178,8 @@ print_r($query);
 					t8.`importance` DESC,
 					t8.`id`
 				";
+echo '<pre>';
+print_r($query);
 
 			$rules = array_reverse(Rule::find_by_sql($query));
 		}
@@ -281,7 +283,7 @@ print_r($query);
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}

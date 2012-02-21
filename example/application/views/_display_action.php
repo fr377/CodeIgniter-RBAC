@@ -1,4 +1,15 @@
-<? $action = Action::find($search_id, array('include' => array('liberties', 'privileges'))); ?>
+<?php
+$action = Action::find(
+	$search_id,
+	array(
+		'include' => array(
+			'liberties' => array(
+				'privilege'
+			)
+		)
+	)
+);
+?>
 <div class="grid_6">
 	<h2>Action (<?=$action->name?>)</h2>
 
@@ -7,53 +18,35 @@
 <?=print_r($action)?>
 </pre>
 -->
-
+	<strong>Participates in privileges</strong>
 	<ul>
-		<?if($action->privileges):?>
-			<?foreach($action->privileges as $privilege):?>
+		<?foreach($action->liberties as $liberty):?>
+			<?if( ! $liberty->privilege->singular ):?>
 				<li>
-					<?=form_open()?>
-						<?=form_submit('submit', 'Revoke')?> from '<?=$privilege->name?>'
+					<?=form_open('actions/revoke')?>
+						<?=form_hidden('privilege_id', $liberty->privilege->id)?>
+						<?=form_hidden('action_id', $action->id)?>
+						<?=form_submit('submit', 'Exclude')?>
+						from <?=$liberty->privilege->name?>
 					<?=form_close()?>
 				</li>
-			<?endforeach;?>
-		<?endif;?>
+			<?endif;?>
+		<?endforeach;?>
 		<li>
-			<?=form_open()?>
-				<?=form_submit('submit', 'Add')?> to
+			<?=form_open('actions/grant')?>
+				<?=form_hidden('action_id', $action->id)?>
+				<?=form_submit('submit', 'Grant')?> to 
 				<select name="privilege_id">
+					<option value="">--- privilege ---</option>
 					<?foreach(Privilege::all(array('conditions' => 'singular is FALSE')) as $privilege):?>
-						<option value="<?=$privilege->id?>"><?=$privilege->name?></option>
-					<?endforeach;?>
+						<?if( ! ($privilege->allows($action)) ):?>
+							<option value="<?=$privilege->id?>"><?=$privilege->name?></option>
+						<?endif?>
+					<?endforeach?>
 				</select>
 			<?=form_close()?>
 		</li>
 	</ul>
-	<?php
-
-
-
-	echo '<strong>The following privileges govern this action</strong>';
-	echo '<ul>';
-	foreach ($action->privileges as $privilege) {
-		$rules = Rule::find_all_by_privilege_id($privilege->id, array('include' => 'resource'));
-
-		echo "<li>{$privilege->name}";
-		if ($rules) {
-			echo '<ul>';
-			foreach ($rules as $rule) {
-				echo '<li>';
-				echo ($rule->allowed) ? 'Allow' : 'Deny';
-				echo " {$rule->group->name} {$rule->privilege->name} to {$rule->resource->name}</li>";
-			}
-			echo '</ul>';
-		} else {
-			echo "<ul><li>No rules govern this privilege</li></ul>";
-		}
-		echo "</li>";
-	}
-	echo '</ul>';
-	?>
 </div>
 <div class="clear"></div>
 <hr>

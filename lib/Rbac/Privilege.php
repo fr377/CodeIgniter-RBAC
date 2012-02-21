@@ -130,7 +130,7 @@ class Privilege extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}

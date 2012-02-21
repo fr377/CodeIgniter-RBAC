@@ -3,37 +3,27 @@ namespace Rbac;
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Entities are described by nouns.  An entity is a discrete thing to which a user
- * can be allowed or denied based on their privileges.
- *
- * Because of the way associated objects are automatically created/deleted, the following is true:
- *	- $this->components[0] is always the global resource
- *	- $this->components[1] is always the singular resource (for granular control)
+ * Actions are described with verbs. An action is something that can be done to (or with) a resource.
+ * For example, your system might benefit from actions such as 'create', 'retrieve', 'update', and 'delete'.
+ * But consider another system with actions like 'chew', 'cook', 'dance', or 'telepathy'.
  * 
  * @extends ActiveRecord
  */
-class Entity extends \ActiveRecord\Model
+class Action extends \ActiveRecord\Model
 {
 
-	/**
-	 * @var mixed
-	 * @access private
-	 */
-	private $_singular_resource;
-	
 
 	/* --------------------------------------------------
 	 *	ACTIVERECORD ASSOCIATIONS
 	 * ----------------------------------------------- */
 
 
-	static $table_name = 'rbac_entities';
+	static $table_name = 'rbac_actions';
 
 	static $has_many = array(
-		array('components'),
-		array('resources', 'through' => 'components')
+		array('liberties'),
+		array('privileges', 'through' => 'liberties')
 	);
-
 
 
 	/* --------------------------------------------------
@@ -60,7 +50,7 @@ class Entity extends \ActiveRecord\Model
 				`description` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
 				PRIMARY KEY (`id`),
 				KEY `name` (`name`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 		");
 	}
 
@@ -72,11 +62,11 @@ class Entity extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
-	
+
 
 	/* --------------------------------------------------
 	 *	ACTIVERECORD CALLBACKS
@@ -84,7 +74,7 @@ class Entity extends \ActiveRecord\Model
 
 
 	/**
-	 * Creates a ganular (i.e., singular) resource and includes the new entity in the global resource.
+	 * Grants the global privilege a liberty to this action.
 	 * 
 	 * @access public
 	 * @return void
@@ -92,27 +82,28 @@ class Entity extends \ActiveRecord\Model
 	public function after_save()
 	{
 		// every entity belongs to the special global (i.e., 'all') resource
-		Resource::find(1)->subsume($this);
+		Privilege::find(1)->grant($this);
 		
 		// every entity needs a singular resource for granular control
-		$resource = new Resource();
-		$resource->name = $this->name;
-		$resource->description = $this->description;
-		$resource->singular = TRUE;
-		$resource->save();
+		$privilege = new Privilege();
+		$privilege->name = $this->name;
+		$privilege->singular = TRUE;
+		$privilege->save();
 		
-		$resource->subsume($this);
-	}
-	
+		$privilege->grant($this);
+/*
+		// every action has a singular privilege for ganular rules
+		if ( ! Liberty::find_by_action_id($this->id) ) {
+			$privilege = new Privilege();
+			$privilege->name = $this->name;
+			$privilege->save();
+			
+			if ( ! $privilege->allows($this) )
+				$privilege->grant($this);
 
-	/**
-	 * Destroy the granular (i.e., singular) resource.
-	 * 
-	 * @access public
-	 * @return void
-	 */
-	public function before_destroy()
-	{
-		Resource::find($this->components[1]->resource_id)->delete();
+			// every action is a part of the global privilege
+			Privilege::find(1)->grant($this);
+		}
+*/
 	}
 }

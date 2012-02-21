@@ -3,13 +3,12 @@ namespace Rbac;
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Memberships represent the associations between users and groups.
- *
- * A membership is to a group and a user as a liberty is to a privilege and an action.
+ * Rules are the key to it all! A rule brings together a group (i.e., one or more users) with a resource (i.e., one
+ * or more entities) and a privilege (i.e., one or more actions).
  * 
  * @extends ActiveRecord
  */
-class Membership extends \ActiveRecord\Model
+class Rule extends \ActiveRecord\Model
 {
 
 
@@ -18,11 +17,12 @@ class Membership extends \ActiveRecord\Model
 	 * ----------------------------------------------- */
 
 
-	static $table_name = 'rbac_memberships';
-
+	static $table_name = 'rbac_rules';
+	
 	static $belongs_to = array(
-		array('user'),
-		array('group')
+		array('privilege'),
+		array('group'),
+		array('resource')
 	);
 
 
@@ -44,18 +44,21 @@ class Membership extends \ActiveRecord\Model
 			self::db_destroy();
 
 		return get_instance()->db->query("
-			CREATE TABLE `".self::$table_name."` (
+			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
 				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-				`user_id` int(10) unsigned DEFAULT NULL,
 				`group_id` int(10) unsigned DEFAULT NULL,
+				`privilege_id` int(10) unsigned DEFAULT NULL,
+				`resource_id` int(10) unsigned DEFAULT NULL,
+				`allowed` tinyint(1) unsigned DEFAULT NULL,
 				PRIMARY KEY (`id`),
-				KEY `user_id` (`user_id`),
-				KEY `group_id` (`group_id`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
+				KEY `group_id` (`group_id`),
+				KEY `privilege_id` (`privilege_id`),
+				KEY `resource_id` (`resource_id`)
+			) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 		");
 	}
 
-
+	
 	/**
 	 * Installation helper method.
 	 * 
@@ -63,7 +66,7 @@ class Membership extends \ActiveRecord\Model
 	 * @static
 	 * @return void
 	 */
-	private static function db_destroy()
+	protected static function db_destroy()
 	{
 		return get_instance()->db->query("DROP TABLE IF EXISTS `".self::$table_name."`");
 	}
@@ -81,8 +84,9 @@ class Membership extends \ActiveRecord\Model
 		$CI =& get_instance();
 		$CI->db->query("
 			ALTER TABLE `".self::$table_name."`
-				ADD CONSTRAINT `memberships_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `".User::$table_name."` (`id`) ON DELETE CASCADE,
-				ADD CONSTRAINT `memberships_ibfk_2` FOREIGN KEY (`group_id`) REFERENCES `".Group::$table_name."` (`id`) ON DELETE CASCADE;
+				ADD CONSTRAINT `rules_ibfk_6` FOREIGN KEY (`resource_id`) REFERENCES `".Resource::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `rules_ibfk_4` FOREIGN KEY (`group_id`) REFERENCES `".Group::$table_name."` (`id`) ON DELETE CASCADE,
+				ADD CONSTRAINT `rules_ibfk_5` FOREIGN KEY (`privilege_id`) REFERENCES `".Privilege::$table_name."` (`id`) ON DELETE CASCADE;
   		");
 	}
 }
