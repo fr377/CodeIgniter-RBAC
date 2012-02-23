@@ -138,7 +138,7 @@ class User extends \ActiveRecord\Model
 
 		$query_method = strtolower('_query_' . get_class($verb) . '_on_' . get_class($noun));
 		$rules = array_reverse(Rule::find_by_sql(self::$query_method($verb, $noun)));
-		
+
 		// if no rules apply, run away! 
 		if ( ! $rules ) return NULL;
 
@@ -152,6 +152,7 @@ class User extends \ActiveRecord\Model
 			if ($rule->importance < $importance_threshold)
 				continue;
 
+			$importance_threshold = $rule->importance;
 			$weight = $rule->is_granular_privilege + $rule->is_granular_resource;
 
 			if ($weight > $weight_threshold) {

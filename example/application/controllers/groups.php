@@ -8,7 +8,7 @@ class Groups extends CI_Controller {
 		if ($this->input->post()) {
 			try {
 				$group = new Group();
-				$group->name = ascii_to_entities($this->input->post('name'));
+				$group->name = $this->input->post('name');
 				$group->save();
 			} catch (Exception $e) {
 				die($e->getMessage());
