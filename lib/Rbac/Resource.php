@@ -97,14 +97,18 @@ class Resource extends \ActiveRecord\Model
 			self::db_destroy();
 
 		return get_instance()->db->query("
-			CREATE TABLE IF NOT EXISTS `".self::$table_name."` (
-				`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-				`name` varchar(32) COLLATE utf8_unicode_ci DEFAULT NULL,
-				`description` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
-				`singular` tinyint(1) unsigned NOT NULL DEFAULT '0',
-				PRIMARY KEY (`id`),
-				KEY `name` (`name`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
+			CREATE  TABLE IF NOT EXISTS `".self::$table_name."` (
+				`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
+				`created_at` DATETIME NULL ,
+				`updated_at` DATETIME NULL ,
+ 
+				`name` VARCHAR(128) NULL DEFAULT NULL ,
+				`description` VARCHAR(128) DEFAULT NULL,
+				`singular` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 ,
+ 
+				PRIMARY KEY (`id`)
+ 
+			) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;
 		");
 	}
 
