@@ -2,84 +2,26 @@
 
 class Welcome extends CI_Controller {
 
-
-	public function __construct()
+	/**
+	 * Index Page for this controller.
+	 *
+	 * Maps to the following URL
+	 * 		http://example.com/index.php/welcome
+	 *	- or -  
+	 * 		http://example.com/index.php/welcome/index
+	 *	- or -
+	 * Since this controller is set as the default controller in 
+	 * config/routes.php, it's displayed at http://example.com/
+	 *
+	 * So any other public methods not prefixed with an underscore will
+	 * map to /index.php/welcome/<method_name>
+	 * @see http://codeigniter.com/user_guide/general/urls.html
+	 */
+	public function index()
 	{
-		parent::__construct();
-
-		// since there is no login system build here, we'll just assume the identity of the prime user
-		try {
-			$this->user = Rbac\User::find(1);
-		
-		// if there's a problem here, just try to rebuild the database
-		} catch (Exception $e) {
-		}
+		$this->load->view('welcome_message');
 	}
-
-
-	public function index($lookup = NULL, $search = NULL)
-	{
-		$CI =& get_instance();
-		
-		$view_data = array(
-			'groups'	=> Rbac\Group::all(),
-			'user'		=> $this->user,
-			'CI'		=> $CI,
-			'display'	=> NULL
-		);
-
-
-		switch ($lookup) {
-
-			case 'user':
-				$view_data['display'] = 'User';
-				$view_data['search_id'] = $search;
-				break;
-
-			case 'group':
-				$view_data['display'] = 'Group';
-				$view_data['search_id'] = $search;
-				break;
-
-			case 'entity':
-				$view_data['display'] = 'Entity';
-				$view_data['search_id'] = $search;
-				break;
-
-			case 'resource':
-				$view_data['display'] = 'Resource';
-				$view_data['search_id'] = $search;
-				break;
-
-			case 'action':
-				$view_data['display'] =  'Action';
-				$view_data['search_id'] =  $search;
-				break;
-
-			case 'privilege':
-				$view_data['display'] = 'Privilege';
-				$view_data['search_id'] =  $search;
-				break;
-
-		}
-
-
-		$this->load->view('welcome', $view_data);
-	}
-
-
-	public function setup()
-	{
-		Rbac::setup();
-		redirect();
-	}
-
-	public function scenario($number)
-	{
-		Rbac::setup();
-		$function = 'setup_scenario_' . $number;
-		Rbac::$function();
-		redirect();
-	}
-
 }
+
+/* End of file welcome.php */
+/* Location: ./application/controllers/welcome.php */

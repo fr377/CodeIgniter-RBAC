@@ -52,7 +52,7 @@ $autoload['packages'] = array();
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array('rbac', 'database');
+$autoload['libraries'] = array('doctrine', 'rbac2');
 
 
 /*
@@ -64,7 +64,7 @@ $autoload['libraries'] = array('rbac', 'database');
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('form', 'url', 'text');
+$autoload['helper'] = array();
 
 
 /*
