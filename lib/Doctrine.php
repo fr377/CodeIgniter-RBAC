@@ -1,61 +1,81 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-
-use Doctrine\Common\ClassLoader,
-    Doctrine\ORM\Configuration,
-    Doctrine\ORM\EntityManager,
-    Doctrine\Common\Cache\ArrayCache,
-    Doctrine\DBAL\Logging\EchoSQLLogger;
-
+<?php
+use Doctrine\ORM\EntityManager,
+    Doctrine\ORM\Configuration;
+ 
+define('DEBUGGING', FALSE);
+ 
 class Doctrine {
+ 
+    public $em = NULL;
+ 
+	public function __construct()
+	{
+		// load database configuration and custom config from CodeIgniter
+		require APPPATH . 'config/database.php';
 
-  public $em = null;
+		// Set up class loading.
+		require_once APPPATH . 'libraries/Doctrine/Common/ClassLoader.php';
 
-  public function __construct()
-  {
-    // load database configuration from CodeIgniter
-    require_once APPPATH.'config/database.php';
+		$doctrineClassLoader = new \Doctrine\Common\ClassLoader('Doctrine', APPPATH . 'libraries');
+		$doctrineClassLoader->register();
 
-    // Set up class loading. You could use different autoloaders, provided by your favorite framework,
-    // if you want to.
-    require_once APPPATH.'libraries/Doctrine/Common/ClassLoader.php';
+		$entitiesClassLoader = new \Doctrine\Common\ClassLoader('models', rtrim(APPPATH, '/'));
+		$entitiesClassLoader->register();
 
-    $doctrineClassLoader = new ClassLoader('Doctrine',  APPPATH.'libraries');
-    $doctrineClassLoader->register();
-    $entitiesClassLoader = new ClassLoader('models', rtrim(APPPATH, "/" ));
-    $entitiesClassLoader->register();
-    $proxiesClassLoader = new ClassLoader('Proxies', APPPATH.'models/proxies');
-    $proxiesClassLoader->register();
+		$proxiesClassLoader = new \Doctrine\Common\ClassLoader('Proxies', APPPATH . 'models');
+		$proxiesClassLoader->register();
 
-    // Set up caches
-    $config = new Configuration;
-    $cache = new ArrayCache;
-    $config->setMetadataCacheImpl($cache);
-    $driverImpl = $config->newDefaultAnnotationDriver(array(APPPATH.'models/Entities'));
-    $config->setMetadataDriverImpl($driverImpl);
-    $config->setQueryCacheImpl($cache);
+		$symfonyClassLoader = new \Doctrine\Common\ClassLoader('Symfony', APPPATH . 'libraries/Doctrine');
 
-    $config->setQueryCacheImpl($cache);
+		$symfonyClassLoader->register();
 
-    // Proxy configuration
-    $config->setProxyDir(APPPATH.'/models/proxies');
-    $config->setProxyNamespace('Proxies');
+		$nestedSetClassLoader = new \Doctrine\Common\ClassLoader('DoctrineExtensions\NestedSet', APPPATH . 'libraries');
+		$nestedSetClassLoader->register();
 
-    // Set up logger
-    $logger = new EchoSQLLogger;
-    $config->setSQLLogger($logger);
+		// Choose caching method based on application mode (ENVIRONMENT is defined in /index.php)
+		if (ENVIRONMENT == 'development')
+			$cache = new \Doctrine\Common\Cache\ArrayCache;
 
-    $config->setAutoGenerateProxyClasses( TRUE );
+		else
+			$cache = new \Doctrine\Common\Cache\ApcCache;
 
-    // Database connection information
-    $connectionOptions = array(
-        'driver' => 'pdo_mysql',
-        'user' =>     $db['default']['username'],
-        'password' => $db['default']['password'],
-        'host' =>     $db['default']['hostname'],
-        'dbname' =>   $db['default']['database']
-    );
+		// Set some configuration options
+		$config = new Configuration;
 
-    // Create EntityManager
-    $this->em = EntityManager::create($connectionOptions, $config);
-  }
+		// Metadata driver
+		$driverImpl = $config->newDefaultAnnotationDriver(APPPATH . 'models');
+		$config->setMetadataDriverImpl($driverImpl);
+
+		// Caching
+		$config->setMetadataCacheImpl($cache);
+		$config->setQueryCacheImpl($cache);
+
+		// Proxies
+		$config->setProxyDir(APPPATH . 'models/Proxies');
+		$config->setProxyNamespace('Proxies');
+
+		if (ENVIRONMENT == 'development')
+			$config->setAutoGenerateProxyClasses(TRUE);
+
+		else
+			$config->setAutoGenerateProxyClasses(FALSE);
+
+		// SQL query logger
+		if (DEBUGGING) {
+			$logger = new \Doctrine\DBAL\Logging\EchoSQLLogger;
+			$config->setSQLLogger($logger);
+		}
+
+		// Database connection information
+		$connectionOptions = array(
+			'driver'	=> 'pdo_mysql',
+			'user'		=> $db['default']['username'],
+			'password'	=> $db['default']['password'],
+			'host'		=> $db['default']['hostname'],
+			'dbname'	=> $db['default']['database']
+		);
+
+		// Create EntityManager
+		$this->em = EntityManager::create($connectionOptions, $config);
+    }
 }

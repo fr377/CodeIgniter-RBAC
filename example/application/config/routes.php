@@ -41,6 +41,12 @@
 $route['default_controller'] = "welcome";
 $route['404_override'] = '';
 
+$route['action/(:num)'] = '/welcome/index/action/$1';
+$route['entity/(:num)'] = '/welcome/index/entity/$1';
+$route['group/(:num)'] = '/welcome/index/group/$1';
+$route['privilege/(:num)'] = '/welcome/index/privilege/$1';
+$route['resource/(:num)'] = '/welcome/index/resource/$1';
+$route['user/(:num)'] = '/welcome/index/user/$1';
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

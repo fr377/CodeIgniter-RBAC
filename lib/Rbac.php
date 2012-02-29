@@ -6,252 +6,237 @@
  * 'Fine-grained' role based access control library for CodeIgniter.
  *
  * @todo Delete associated singular privilege when deleting an action
- * @todo I think there's a bug in User::is_allowed() ... it doesn't account for group weight.
+ * @todo I think there's a bug in User::is_allowed() ... it doesn't account for All Groups weight.
+ *
+ * @see https://github.com/blt04/doctrine2-nestedset
+ * @see http://www.doctrine-project.org/projects/orm/2.1/docs/en
+ * @see http://mikehillyer.com/articles/managing-hierarchical-data-in-mysql/
  */
 class Rbac
 {
+	protected $entityManager;
 
 	public function __construct()
 	{
-/* 		get_instance()->load->add_package_path(__CLASS__); */
-		require_once(__CLASS__ . '/Action.php');
-		require_once(__CLASS__ . '/Privilege.php');
-		require_once(__CLASS__ . '/Liberty.php');
-		
-		require_once(__CLASS__ . '/User.php');
-		require_once(__CLASS__ . '/Group.php');
-		require_once(__CLASS__ . '/Membership.php');
-		
-		require_once(__CLASS__ . '/Entity.php');
-		require_once(__CLASS__ . '/Resource.php');
-		require_once(__CLASS__ . '/Component.php');
-		
-		require_once(__CLASS__ . '/Rule.php');
+		$this->entityManager =& get_instance()->doctrine->em;
 	}
 
-
-	public static function setup_scenario_1()
+	public function setup()
 	{
-		$entity1 = new Rbac\Entity();
-		$entity1->name = 'thing one';
-		$entity1->save();
-		
-		$entity2 = new Rbac\Entity();
-		$entity2->name = 'thing two';
-		$entity2->save();
-		
-		$entity3 = new Rbac\Entity();
-		$entity3->name = 'thing three';
-		$entity3->save();
-		
-		$entity4 = new Rbac\Entity();
-		$entity4->name = 'thing four';
-		$entity4->save();
+		//
+		//	GROUPS
+		//
+		$ns_manager = new \DoctrineExtensions\NestedSet\Manager(new \DoctrineExtensions\NestedSet\Config($this->entityManager, 'models\RBAC\Group'));
 
-		$entity5 = new Rbac\Entity();
-		$entity5->name = 'thing five';
-		$entity5->save();
+		$all_users = new \models\RBAC\Group();
+		$all_users->setName('All Users');
+		$rootNode = $ns_manager->createRoot($all_users);
 
-		$entity6 = new Rbac\Entity();
-		$entity6->name = 'thing six';
-		$entity6->save();
-
-		$entity7 = new Rbac\Entity();
-		$entity7->name = 'thing seven';
-		$entity7->save();
-		
-		$entity8 = new Rbac\Entity();
-		$entity8->name = 'thing eight';
-		$entity8->save();
-		
-		$entity9 = new Rbac\Entity();
-		$entity9->name = 'thing nine';
-		$entity9->save();
-		
-		$entity10 = new Rbac\Entity();
-		$entity10->name = 'thing ten';
-		$entity10->save();
-		
-		$resource = new Rbac\Resource();
-		$resource->name = 'Biological things';
-		$resource->save();
-		
-		$resource->subsume($entity1);
-		$resource->subsume($entity3);
-		$resource->subsume($entity5);
-		$resource->subsume($entity7);
-		$resource->subsume($entity9);
-		
-		$resource = new Rbac\Resource();
-		$resource->name = 'In the vacuum of space';
-		$resource->save();
-
-		$resource = new Rbac\Resource();
-		$resource->name = 'On earth';
-		$resource->save();
-
-		$resource = new Rbac\Resource();
-		$resource->name = 'Psionic things';
-		$resource->save();
-
-		$resource = new Rbac\Resource();
-		$resource->name = 'Extra-terrestrial things';
-		$resource->save();
-
-		$resource = new Rbac\Resource();
-		$resource->name = 'Terrestrial things';
-		$resource->save();
-
-		$resource = new Rbac\Resource();
-		$resource->name = 'Mechanical things';
-		$resource->save();
-
-		$resource->subsume($entity2);
-		$resource->subsume($entity4);
-		$resource->subsume($entity6);
-		$resource->subsume($entity8);
-		$resource->subsume($entity10);
-		
-		$action1 = new Rbac\Action();
-		$action1->name = 'see';
-		$action1->save();
-		
-		$action2 = new Rbac\Action();
-		$action2->name = 'taste';
-		$action2->save();
-		
-		$action3 = new Rbac\Action();
-		$action3->name = 'touch';
-		$action3->save();
-		
-		$action4 = new Rbac\Action();
-		$action4->name = 'hear';
-		$action4->save();
-		
-		$action5 = new Rbac\Action();
-		$action5->name = 'smell';
-		$action5->save();
-		
-		$action6 = new Rbac\Action();
-		$action6->name = 'fly';
-		$action6->save();
-		
-		$action7 = new Rbac\Action();
-		$action7->name = 'read minds';
-		$action7->save();
-
-		$action8 = new Rbac\Action();
-		$action8->name = 'irritate';
-		$action8->save();
-
-		$action9 = new Rbac\Action();
-		$action9->name = 'invisibilify';
-		$action9->save();
-
-		$action10 = new Rbac\Action();
-		$action10->name = 'levitate';
-		$action10->save();
-		
-		$privilege = new Rbac\Privilege();
-		$privilege->name = 'good guy moral code';
-		$privilege->save();
-		$privilege->grant($action6);
-		$privilege->grant($action7);
-		$privilege->grant($action8);
-		$privilege->grant($action9);
-		$privilege->grant($action10);
-		
-		$privilege = new Rbac\Privilege();
-		$privilege->name = 'bad guy moral code';
-		$privilege->save();
-		$privilege->grant($action1);
-		$privilege->grant($action2);
-		$privilege->grant($action3);
-		$privilege->grant($action4);
-		$privilege->grant($action5);
-		
-		$group1 = new Rbac\Group();
-		$group1->name = 'Northern Freedom Alliance';
-		$group1->save();
-		
-		$group2 = new Rbac\Group();
-		$group2->name = 'The Bloody Mummers';
-		$group2->save();
-		
-		$user = new Rbac\User();
-		$user->email = 'l337@hotmai1.com';
-		$user->save();
-		$user->join_group($group1);
-		
-		$user = new Rbac\User();
-		$user->email = 'hot2trot627@hotmai1.com';
-		$user->save();
-		$user->join_group($group2);
-	}
+		$granular_groups = new \models\RBAC\Group();
+		$granular_groups->setName('Granular');
+		$rootNode = $ns_manager->createRoot($granular_groups);
 
 
-	public static function setup()
-	{
-		self::_reset_schema();
-		self::_reset_records();
-		self::_reset_relations();
+		// Privileges
+		$ns_manager = new \DoctrineExtensions\NestedSet\Manager(new \DoctrineExtensions\NestedSet\Config($this->entityManager, 'models\RBAC\Privilege'));
+
+		$all_privileges = new \models\RBAC\Privilege();
+		$all_privileges->setName('All Privileges');
+		$rootNode = $ns_manager->createRoot($all_privileges);
+
+		$granular_privileges = new \models\RBAC\Privilege();
+		$granular_privileges->setName('Granular');
+		$granular_root = $ns_manager->createRoot($granular_privileges);
+
+
+		// Resources
+		$ns_manager = new \DoctrineExtensions\NestedSet\Manager(new \DoctrineExtensions\NestedSet\Config($this->entityManager, 'models\RBAC\Resource'));
+
+		$all_resources = new \models\RBAC\Resource();
+		$all_resources->setName('All Resources');
+		$rootNode = $ns_manager->createRoot($all_resources);
+
+		$granular_resources = new \models\RBAC\Resource();
+		$granular_resources->setName('Granular');
+		$granular_root = $ns_manager->createRoot($granular_resources);
+
+		//
+		//	RULES
+		$rule = new \models\RBAC\Rule();
+		$rule->setAllowed(TRUE);
+		$rule->setGroup($all_users);
+		$rule->setPrivilege($all_privileges);
+		$rule->setResource($all_resources);
+		$this->entityManager->persist($rule);
+
+		$this->entityManager->flush();
 	}
 	
-
-	private static function _reset_records()
+	public function setup_scenario_1()
 	{
-		$privilege = new Rbac\Privilege();
-		$privilege->name = 'All actions';
-		$privilege->save();
-		
-		// global users group has id 1
-		$group = new Rbac\Group();
-		$group->name = 'All users';
-		$group->save();
-		
-		// likewise, the administrator naturally is id 1
-		$user = new Rbac\User();
-		$user->email = 'admin@example.com';
-		$user->first_name = 'Administrator';
-		$user->save();
+		self::setup();
 
-		// now we need some objects:
-		// an object container
-		$resource = new Rbac\Resource();
-		$resource->name = 'All resources';
-		$resource->save();
+		//
+		//	GROUPS
+		//
+		$ns_manager = new \DoctrineExtensions\NestedSet\Manager(new \DoctrineExtensions\NestedSet\Config($this->entityManager, 'models\RBAC\Group'));
 
-		// someone said 'admin', right?
-		$rule = new Rbac\Rule();
-		$rule->group_id = 1;
-		$rule->privilege_id = 1;
-		$rule->resource_id = 1;
-		$rule->allowed = TRUE;
-		$rule->save();
-	}
-	
+		$tier_2_1 = new \models\RBAC\Group();
+		$tier_2_1->setName('Group (1)');
 
-	private static function _reset_relations()
-	{
-		Rbac\Component::db_relations();
-		Rbac\Liberty::db_relations();
-		Rbac\Membership::db_relations();
-		Rbac\Rule::db_relations();
-	}
-	
-	
-	private static function _reset_schema()
-	{
-		Rbac\Component::db_create();
-		Rbac\Liberty::db_create();
-		Rbac\Membership::db_create();
-		Rbac\Rule::db_create();
+		$tier_2_2 = new \models\RBAC\Group();
+		$tier_2_2->setName('Group (2)');
+
+		$tier_2_3 = new \models\RBAC\Group();
+		$tier_2_3->setName('Group (3)');
+
+		$rootNode = $this->entityManager->createQuery('SELECT g FROM models\RBAC\Group g WHERE g.root = 1 AND g.lft = 1')->getResult();
+		$rootNode = $ns_manager->wrapNode($rootNode[0]);
+		$rootNode->addChild($tier_2_1);
+		$rootNode->addChild($tier_2_2);
+		$rootNode->addChild($tier_2_3);
+
+
+		//
+		//	USERS
+		//
+		$user = new \models\RBAC\User();
+		$user->setEmail('peter@example.com');
+		$user->setFirstName('Peter');
+		$user->setLastName('Castell');
+		$this->entityManager->persist($user);
+
+		$user = new \models\RBAC\User();
+		$user->setEmail('karen@example.com');
+		$user->setFirstName('Karen');
+		$user->setLastName('Campbell');
+		$this->entityManager->persist($user);
+
+		$random_users = array();
+
+		for ($i = 1; $i <= 5; $i++) {
+			$random_users[$i] = new \models\RBAC\User();
+			$random_users[$i]->setEmail("dummy{$i}@example.com");
+			$random_users[$i]->setFirstName('Firstname');
+			$random_users[$i]->setLastName('Lastname');
+			$this->entityManager->persist($random_users[$i]);
+		}
 		
-		Rbac\Action::db_create();
-		Rbac\Entity::db_create();
-		Rbac\Group::db_create();
-		Rbac\Privilege::db_create();
-		Rbac\Resource::db_create();
-		Rbac\User::db_create();
+		$random_users[1]->joinGroup($tier_2_1);
+		$random_users[2]->joinGroup($tier_2_1);
+		
+		$random_users[1]->joinGroup($tier_2_2);
+		$random_users[2]->joinGroup($tier_2_2);
+		$random_users[3]->joinGroup($tier_2_2);
+
+		$random_users[4]->joinGroup($tier_2_3);
+		$random_users[5]->joinGroup($tier_2_3);
+		
+
+		//
+		//	PRIVILEGES
+		//
+		$ns_manager = new \DoctrineExtensions\NestedSet\Manager(new \DoctrineExtensions\NestedSet\Config($this->entityManager, 'models\RBAC\Privilege'));
+
+		$tier_2_1 = new \models\RBAC\Privilege();
+		$tier_2_1->setName('Second tier (1)');
+
+		$tier_2_2 = new \models\RBAC\Privilege();
+		$tier_2_2->setName('Second tier (2)');
+
+		$rootNode = $this->entityManager->createQuery('SELECT p FROM models\RBAC\Privilege p WHERE p.root = 1 AND p.lft = 1')->getResult();
+		$rootNode = $ns_manager->wrapNode($rootNode[0]);
+		$rootNode->addChild($tier_2_1);
+		$rootNode->addChild($tier_2_2);
+
+		$tier_3_1 = new \models\RBAC\Privilege();
+		$tier_3_1->setName('Third tier (1)');
+
+		$rootNode = $ns_manager->wrapNode($tier_2_2);
+		$rootNode->addChild($tier_3_1);
+
+		//
+		//	ACTIONS
+		//
+		$action_1 = new \models\RBAC\Action();
+		$action_1->setName('Action 1');
+		$this->entityManager->persist($action_1);
+
+		$action_2 = new \models\RBAC\Action();
+		$action_2->setName('Action 2');
+		$this->entityManager->persist($action_2);
+
+		$action_3 = new \models\RBAC\Action();
+		$action_3->setName('Action 3');
+		$this->entityManager->persist($action_3);
+
+		$action_1->grant($tier_2_1);
+		$action_2->grant($tier_2_1);
+		$action_3->grant($tier_2_1);
+
+		$action_1->grant($tier_2_2);
+		$action_2->grant($tier_2_2);
+
+		$action_3->grant($tier_3_1);
+
+
+		//
+		//	RESOURCES
+		//
+		$ns_manager = new \DoctrineExtensions\NestedSet\Manager(new \DoctrineExtensions\NestedSet\Config($this->entityManager, 'models\RBAC\Resource'));
+
+		$tier_2_1 = new \models\RBAC\Resource();
+		$tier_2_1->setName('Second tier (1)');
+
+		$tier_2_2 = new \models\RBAC\Resource();
+		$tier_2_2->setName('Second tier (2)');
+
+		$rootNode = $this->entityManager->createQuery('SELECT r FROM models\RBAC\Resource r WHERE r.root = 1 AND r.lft = 1')->getResult();
+		$rootNode = $ns_manager->wrapNode($rootNode[0]);
+		$rootNode->addChild($tier_2_1);
+		$rootNode->addChild($tier_2_2);
+
+		$tier_3_1 = new \models\RBAC\Resource();
+		$tier_3_1->setName('Third tier (1)');
+
+		$rootNode = $ns_manager->wrapNode($tier_2_1);
+		$rootNode->addChild($tier_3_1);
+
+		$tier_3_2 = new \models\RBAC\Resource();
+		$tier_3_2->setName('Third tier (2)');
+
+		$rootNode = $ns_manager->wrapNode($tier_2_2);
+		$rootNode->addChild($tier_3_2);
+
+
+		//
+		//	ENTITIES
+		//
+		$entities = array();
+		for ($i = 1; $i <= 5; $i++) {
+			$entities[$i] = new \models\RBAC\Entity();
+			$entities[$i]->setName('Entity ' . $i);
+			$this->entityManager->persist($entities[$i]);
+		}
+
+		$entities[1]->join_resource($tier_2_1);
+		$entities[2]->join_resource($tier_2_1);
+		$entities[3]->join_resource($tier_2_1);
+
+		$entities[4]->join_resource($tier_2_2);
+		$entities[5]->join_resource($tier_2_2);
+
+		$entities[1]->join_resource($tier_3_1);
+		$entities[2]->join_resource($tier_3_1);
+		$entities[3]->join_resource($tier_3_1);
+		$entities[4]->join_resource($tier_3_1);
+		$entities[5]->join_resource($tier_3_1);
+
+		$entities[1]->join_resource($tier_3_2);
+		$entities[2]->join_resource($tier_3_2);
+		$entities[5]->join_resource($tier_3_2);
+
+
+		$this->entityManager->flush();
 	}
 }
