@@ -114,7 +114,7 @@ class User
 				throw new \Exception('Noun clause must be either an Entity or Resource object');
 
 		$query_method = strtolower('_query_' . end(explode('\\', get_class($verb))) . '_on_' . end(explode('\\', get_class($noun))));
-return self::$query_method($verb, $noun)->getSql();
+//return self::$query_method($verb, $noun)->getSql();
 
 		$rules = self::$query_method($verb, $noun)->getResult(\Doctrine\ORM\Query::HYDRATE_OBJECT);
 
@@ -183,30 +183,54 @@ return TRUE;
 
 	private function _query_privilege_on_resource(Privilege $privilege, Resource $resource)
 	{
-		$queryBuilder =& get_instance()->doctrine->em->createQueryBuilder();
-		
-		$queryBuilder
-			->select(
-				'rule',
-				'privilege'
-			)
-			->from('models\RBAC\Rule', 'rule')
-
-			->innerJoin('rule.group', 'group')
-				->innerJoin('group.users', 'user')
-
-			->innerJoin('rule.privilege', 'privilege')
-			->innerJoin('rule.resource', 'resource')
-
-			->where("user.id = {$this->getId()}")
-			->andWhere('privilege.id = 2')
-			->andWhere("resource.id = 1")
-/* 			->andWhere("privilege.id = {$privilege->getId()}") */
-/* 			->andWhere("resource.id = {$resource->getId()}") */
-
-			->orderBy('group.importance', 'DESC')
-			->addOrderBy('group.id');
-
-		return $queryBuilder->getQuery();
+//		$queryBuilder =& get_instance()->doctrine->em->createQueryBuilder();
+//		
+//		$queryBuilder
+//			->select(
+//				'rule',
+//				'privilege'
+//			)
+//			->from('models\RBAC\Rule', 'rule')
+//
+//			->innerJoin('rule.group', 'group')
+//				->innerJoin('group.users', 'user')
+//
+//			->innerJoin('rule.privilege', 'privilege')
+//			->innerJoin('rule.resource', 'resource')
+//
+//			->where("user.id = {$this->getId()}")
+//			->andWhere('privilege.id = 2')
+//			->andWhere("resource.id = 1")
+///* 			->andWhere("privilege.id = {$privilege->getId()}") */
+///* 			->andWhere("resource.id = {$resource->getId()}") */
+//
+//			->orderBy('group.importance', 'DESC')
+//			->addOrderBy('group.id');
+//        \Doctrine\Common\Util\Debug::dump($resource->getRootValue(),3);exit;
+                $entity_manager = get_instance()->doctrine->em;
+                $dql   = "select ru from models\RBAC\Rule ru
+                  inner join ru.group g
+                  inner join g.users u
+                            with u.id = :user_id
+                  inner join ru.resource re
+                           with re.id between :resource_lft and :resource_rgt and re.root = :route_id
+                  inner join ru.privilege p
+                  where 
+                           p.lft between  
+                           ( select min( p1.lft) from models\RBAC\Privilege p1 inner join p1.actions a1 with a1.name = :action_name ) 
+                           and
+                           ( select max( p2.rgt) from models\RBAC\Privilege p2 inner join p2.actions a2 with a2.name = :action_name ) 
+                  ";
+                $query = $entity_manager->createQuery($dql);
+                $query->setParameters(
+                    array(
+                        "user_id"      => $this->id,
+                        "resource_lft" => $resource->getLeftValue(),
+                        "resource_rgt" => $resource->getRightValue(),
+                        "route_id"     => $resource->getRootValue(),
+                        "action_name"  => $privilege->getName()
+                    )
+                );
+		return $query;
 	}
 }
